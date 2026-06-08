@@ -23,7 +23,7 @@
         
         /* KONTROL UKURAN GRAFIK */
         .chart-container { position: relative; height: 250px; width: 100%; }
-        .chart-container-national { position: relative; height: 400px; width: 100%; } /* Tinggi khusus agar bisa discroll jika perlu */
+        .chart-container-national { position: relative; height: 400px; width: 100%; } 
 
         /* TABEL */
         .table-custom th { background-color: #dbeaff; text-align: center; vertical-align: middle; font-size: 0.85rem; }
@@ -43,12 +43,20 @@
 
         #resetFilterBtn { display: none; position: absolute; top: 10px; right: 10px; z-index: 400; }
         
-        /* Overlay jika MOW dipilih */
+        /* Overlay Peringatan */
         .mow-overlay { display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; font-weight: bold; color: #dc3545; text-align: center; padding: 20px;}
+        .loading-overlay { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; font-size: 1.2rem; font-weight: bold; color: #004a99; flex-direction: column; }
     </style>
 </head>
 <body>
 
+    <!-- Overlay Loading Keseluruhan -->
+    <div id="mainLoading" class="loading-overlay">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+        <span id="loadingText">Menghubungkan ke Database...</span>
+    </div>
+
+    <!-- Header -->
     <header class="header-custom d-flex flex-wrap align-items-center justify-content-between">
         <div class="d-flex align-items-center" style="width: 25%; min-width: 200px;">
             <img src="./logo-kemendukbangga24-1200.webp" alt="Logo Kemendukbangga" style="height: 50px; width: auto; object-fit: contain;">
@@ -60,34 +68,36 @@
         <div class="d-flex justify-content-end align-items-center" style="width: 25%; min-width: 250px;">
             <div class="d-flex align-items-center bg-light text-dark p-1 rounded">
                 <span class="ms-1 me-2 text-nowrap" style="font-size: 0.8rem; font-weight: bold;">Data Update:</span>
-                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;"></select>
+                <!-- Event onchange untuk menarik data baru saat dropdown diganti -->
+                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;" onchange="fetchSemuaData(this.value)"></select>
             </div>
         </div>
     </header>
 
+    <!-- Konten Utama -->
     <div class="container-fluid p-4">
         
+        <!-- BARIS 1: 4 Cards, Peta, Nasional -->
         <div class="row mb-4 align-items-stretch">
-            
             <div class="col-lg-3 mb-4 mb-lg-0 d-flex flex-column">
                 <div class="card card-custom h-100 p-3 bg-light">
                     <h5 class="text-center fw-bold mb-3 border-bottom pb-2">DATA CAPAIAN <br><small style="font-size: 0.8rem;" class="text-muted">(Klik untuk filter)</small></h5>
                     
                     <div class="kpi-card active" id="card_TOTAL" onclick="changeMetric('TOTAL')">
                         <h5>PB TOTAL</h5>
-                        <h3 id="val_TOTAL">41.01%</h3>
+                        <h3 id="val_TOTAL">...</h3>
                     </div>
                     <div class="kpi-card" id="card_KBPP" onclick="changeMetric('KBPP')">
                         <h5>PB KBPP</h5>
-                        <h3 id="val_KBPP">41.08%</h3>
+                        <h3 id="val_KBPP">...</h3>
                     </div>
                     <div class="kpi-card" id="card_MKJP" onclick="changeMetric('MKJP')">
                         <h5>PB MKJP</h5>
-                        <h3 id="val_MKJP">40.80%</h3>
+                        <h3 id="val_MKJP">...</h3>
                     </div>
                     <div class="kpi-card" id="card_MOW" onclick="changeMetric('MOW')">
                         <h5>PB MOW</h5>
-                        <h3 id="val_MOW">35.50%</h3>
+                        <h3 id="val_MOW">...</h3>
                     </div>
                 </div>
             </div>
@@ -111,6 +121,7 @@
             </div>
         </div>
 
+        <!-- BARIS 2: Grafik Kab/Kota, Top 10 Kec, Bot 10 Kec -->
         <div class="row mb-4">
             <div class="col-lg-4 mb-4 mb-lg-0">
                 <div class="card card-custom p-2 h-100">
@@ -134,6 +145,7 @@
             </div>
         </div>
 
+        <!-- BARIS 3: Tabel Desa/Kelurahan -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom p-0 position-relative">
@@ -148,11 +160,13 @@
                                     <th width="15%">Kecamatan</th>
                                     <th width="20%">Desa/Kelurahan</th>
                                     <th width="15%">Target Kecamatan</th>
-                                    <th width="15%">Capaian <span id="labelTabel"></span></th>
+                                    <th width="15%">Capaian <span id="labelTabel">PB TOTAL</span></th>
                                     <th width="15%">Persentase (%)</th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                <tr><td colspan="7" class="text-center py-4">Memuat data dari server...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -161,70 +175,27 @@
 
     </div>
 
+    <!-- Footer -->
     <footer class="footer-custom">timjakbkrbali&copy;2026</footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Variabel Status Global
-        let currentMetric = 'TOTAL'; // Default metrik yang dipilih
+        // ==========================================
+        // KONFIGURASI API (PASTE URL ANDA DI SINI!)
+        // ==========================================
+        const BASE_API_URL = 'https://script.google.com/macros/s/AKfycbz1pW1E4itbZhYSjI4G_rlb-iQU3JQ9lhDJZvall4cdWZo5hlvbhdrmpLDy143xtmAcJA/exec'; 
+
+        // Variabel Global
+        let currentMetric = 'TOTAL'; 
         let currentKabFilter = 'Semua';
+
+        let dataNasional = [];
+        let dataKabupaten = [];
+        let dataKecamatan = [];
+        let dataDesa = [];
 
         Chart.register(ChartDataLabels);
         let map, chartNasional, chartKab, chartKecTop, chartKecBot;
-
-        // ==========================================
-        // DUMMY DATA YANG DIPERLUAS (Ada TOTAL, KBPP, MKJP, MOW)
-        // ==========================================
-        const dataNasional = [
-            { Provinsi: "Jawa Timur", TOTAL: 85, KBPP: 80, MKJP: 75, MOW: 60 },
-            { Provinsi: "Jawa Barat", TOTAL: 82, KBPP: 78, MKJP: 70, MOW: 55 },
-            { Provinsi: "Jawa Tengah", TOTAL: 80, KBPP: 75, MKJP: 68, MOW: 50 },
-            { Provinsi: "Bali", TOTAL: 65, KBPP: 60, MKJP: 55, MOW: 45 },
-            { Provinsi: "DKI Jakarta", TOTAL: 60, KBPP: 55, MKJP: 50, MOW: 40 },
-            { Provinsi: "Banten", TOTAL: 58, KBPP: 52, MKJP: 48, MOW: 38 },
-            { Provinsi: "DIY", TOTAL: 55, KBPP: 50, MKJP: 45, MOW: 35 },
-            { Provinsi: "Sumatera Utara", TOTAL: 50, KBPP: 48, MKJP: 40, MOW: 30 },
-            { Provinsi: "Sulawesi Selatan", TOTAL: 45, KBPP: 40, MKJP: 35, MOW: 25 },
-            { Provinsi: "NTB", TOTAL: 40, KBPP: 38, MKJP: 30, MOW: 20 }
-        ];
-
-        const dataKabupaten = [
-            { Kabupaten: "Badung", Target: 1000, TOTAL: 800, KBPP: 750, MKJP: 600, MOW: 100 }, 
-            { Kabupaten: "Bangli", Target: 500, TOTAL: 450, KBPP: 400, MKJP: 300, MOW: 50 },
-            { Kabupaten: "Buleleng", Target: 1200, TOTAL: 950, KBPP: 900, MKJP: 750, MOW: 150 }, 
-            { Kabupaten: "Denpasar", Target: 1500, TOTAL: 1200, KBPP: 1100, MKJP: 900, MOW: 200 },
-            { Kabupaten: "Gianyar", Target: 1000, TOTAL: 750, KBPP: 700, MKJP: 650, MOW: 120 }, 
-            { Kabupaten: "Jembrana", Target: 800, TOTAL: 600, KBPP: 550, MKJP: 450, MOW: 80 },
-            { Kabupaten: "Karangasem", Target: 700, TOTAL: 550, KBPP: 500, MKJP: 400, MOW: 70 }, 
-            { Kabupaten: "Klungkung", Target: 500, TOTAL: 400, KBPP: 350, MKJP: 300, MOW: 40 },
-            { Kabupaten: "Tabanan", Target: 1000, TOTAL: 850, KBPP: 800, MKJP: 700, MOW: 110 }
-        ];
-
-        const dataKecamatan = [
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Target: 300, TOTAL: 150, KBPP: 140, MKJP: 100 },
-            { Kabupaten: "Jembrana", Kecamatan: "Mendoyo", Target: 200, TOTAL: 120, KBPP: 110, MKJP: 80 },
-            { Kabupaten: "Jembrana", Kecamatan: "Melaya", Target: 200, TOTAL: 40, KBPP: 35, MKJP: 20 },
-            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Target: 400, TOTAL: 200, KBPP: 190, MKJP: 150 },
-            { Kabupaten: "Tabanan", Kecamatan: "Tabanan", Target: 350, TOTAL: 180, KBPP: 170, MKJP: 140 },
-            { Kabupaten: "Tabanan", Kecamatan: "Selemadeg", Target: 100, TOTAL: 20, KBPP: 15, MKJP: 10 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Target: 500, TOTAL: 350, KBPP: 320, MKJP: 280 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Barat", Target: 500, TOTAL: 300, KBPP: 280, MKJP: 250 },
-            { Kabupaten: "Badung", Kecamatan: "Kuta", Target: 400, TOTAL: 280, KBPP: 250, MKJP: 200 },
-            { Kabupaten: "Badung", Kecamatan: "Abiansemal", Target: 200, TOTAL: 50, KBPP: 45, MKJP: 30 },
-            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Target: 300, TOTAL: 210, KBPP: 200, MKJP: 180 },
-            { Kabupaten: "Buleleng", Kecamatan: "Gerokgak", Target: 200, TOTAL: 30, KBPP: 25, MKJP: 15 },
-            { Kabupaten: "Gianyar", Kecamatan: "Ubud", Target: 300, TOTAL: 190, KBPP: 180, MKJP: 150 },
-            { Kabupaten: "Bangli", Kecamatan: "Kintamani", Target: 250, TOTAL: 140, KBPP: 130, MKJP: 100 }
-        ];
-
-        const dataDesa = [
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Baler Bale Agung", TargetKec: 300, TOTAL: 50, KBPP: 45, MKJP: 30 },
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Banjar Tengah", TargetKec: 300, TOTAL: 45, KBPP: 40, MKJP: 25 },
-            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Desa: "Kediri", TargetKec: 400, TOTAL: 120, KBPP: 110, MKJP: 90 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Desa: "Sanur", TargetKec: 500, TOTAL: 150, KBPP: 140, MKJP: 120 },
-            { Kabupaten: "Badung", Kecamatan: "Kuta", Desa: "Legian", TargetKec: 400, TOTAL: 90, KBPP: 85, MKJP: 70 },
-            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Desa: "Sangsit", TargetKec: 300, TOTAL: 60, KBPP: 55, MKJP: 40 }
-        ];
 
         const koordinatKabupaten = {
             "Buleleng": { lat: -8.2045, lng: 114.9616 }, "Jembrana": { lat: -8.3204, lng: 114.6540 },
@@ -240,22 +211,85 @@
         function initDashboard() {
             generateDateOptions(); 
             initMap();
-            updateAllComponents();
+            // Ambil data berdasarkan dropdown tanggal saat ini (default: 8 Juni)
+            const initialDate = document.getElementById('dateFilter').value;
+            fetchSemuaData(initialDate);
         }
 
-        // Generate Opsi Tanggal (Mulai 9 Juni karena 8 Juni dihapus)
+        // Generate Dropdown dengan Value ID_Tanggal ('0806', '0906', dst)
         function generateDateOptions() {
             const select = document.getElementById('dateFilter');
             const bulanIndo = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
-            let startDate = new Date(2026, 5, 9); // Mulai 9 Juni
+            let startDate = new Date(2026, 5, 8); // Mulai 8 Juni
             let endDate = new Date(2026, 6, 12);  
 
             while (startDate <= endDate) {
                 let d = startDate.getDate();
                 let m = bulanIndo[startDate.getMonth()];
                 let y = startDate.getFullYear();
-                select.add(new Option(`${d} ${m} ${y} PUKUL 15.00 WIB`, `${y}-${m}-${d}`));
+                
+                // Format ID_Tanggal: DDMM (Contoh: 0806)
+                let dStr = String(startDate.getDate()).padStart(2, '0');
+                let mStr = String(startDate.getMonth() + 1).padStart(2, '0'); // GetMonth index mulai 0
+                let idTanggal = dStr + mStr; 
+
+                select.add(new Option(`${d} ${m} ${y} PUKUL 15.00 WIB`, idTanggal));
                 startDate.setDate(startDate.getDate() + 1);
+            }
+        }
+
+        // ==========================================
+        // FUNGSI FETCH DATA DARI GOOGLE SHEETS
+        // ==========================================
+        async function fetchSemuaData(tanggal) {
+            try {
+                // Tampilkan Loading
+                document.getElementById('mainLoading').style.display = 'flex';
+                document.getElementById('loadingText').innerText = `Menarik Data Tanggal: ${tanggal}...`;
+
+                // Reset Nilai Card KPI
+                document.getElementById('val_TOTAL').innerText = '...';
+                document.getElementById('val_KBPP').innerText = '...';
+                document.getElementById('val_MKJP').innerText = '...';
+                document.getElementById('val_MOW').innerText = '...';
+
+                // Ambil Data JSON dari Web App
+                const respon = await fetch(`${BASE_API_URL}?tanggal=${tanggal}`);
+                const result = await respon.json();
+
+                // Simpan ke Variabel Global
+                dataNasional = result.API_Nasional || [];
+                dataKabupaten = result.API_Kabupaten || [];
+                dataKecamatan = result.API_Kecamatan || [];
+                dataDesa = result.API_Desa || [];
+                const dataProvinsi = result.API_Provinsi || [];
+
+                // Isi Nilai 4 Card KPI (Pastikan API mengembalikan desimal ex: 0.4101 lalu diformat)
+                dataProvinsi.forEach(item => {
+                    const el = document.getElementById(`val_${item.Metrik}`);
+                    if (el) {
+                        // Cek jika datanya ada huruf %-nya atau berupa angka desimal mentah
+                        let strNilai = item.Nilai.toString();
+                        if(strNilai.includes('%')) {
+                            el.innerText = strNilai;
+                        } else {
+                            el.innerText = (parseFloat(item.Nilai) * 100).toFixed(2) + '%';
+                        }
+                    }
+                });
+
+                // Setel filter ke "Semua" setiap kali ganti tanggal
+                currentKabFilter = 'Semua';
+                if(map) map.flyTo([-8.409518, 115.188919], 9, { duration: 1 });
+
+                // Sembunyikan Loading dan Render UI
+                document.getElementById('mainLoading').style.display = 'none';
+                updateAllComponents();
+
+            } catch (error) {
+                console.error("Gagal menarik data:", error);
+                document.getElementById('mainLoading').style.display = 'none';
+                document.querySelector('#tabelDesa tbody').innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Gagal terhubung ke Database. Periksa koneksi atau URL Web App.</td></tr>';
             }
         }
 
@@ -265,13 +299,11 @@
         function changeMetric(metric) {
             currentMetric = metric;
             
-            // Ubah Style Card Aktif
             document.querySelectorAll('.kpi-card').forEach(el => el.classList.remove('active'));
             document.getElementById('card_' + metric).classList.add('active');
             document.getElementById('labelNasional').innerText = 'PB ' + metric;
             document.getElementById('labelTabel').innerText = 'PB ' + metric;
 
-            // Jika MOW, tampilkan overlay peringatan di chart Kec & Desa
             const overlays = document.querySelectorAll('.mow-overlay');
             if (metric === 'MOW') {
                 overlays.forEach(el => el.style.display = 'flex');
@@ -279,7 +311,6 @@
                 overlays.forEach(el => el.style.display = 'none');
             }
 
-            // Refresh data yang tampil
             updateAllComponents();
         }
 
@@ -298,15 +329,16 @@
         }
 
         function renderMap() {
-            // Hapus layer marker yang lama
             map.eachLayer((layer) => { if (layer instanceof L.Marker) map.removeLayer(layer); });
 
             for (let kab in koordinatKabupaten) {
                 let dataKab = dataKabupaten.find(d => d.Kabupaten === kab);
                 let persen = "0.00";
                 
+                // Menghitung persentase dari Data Asli API
                 if(dataKab && dataKab.Target > 0) {
-                    persen = ((dataKab[currentMetric] / dataKab.Target) * 100).toFixed(2);
+                    let capaian = dataKab[currentMetric] || 0;
+                    persen = ((capaian / dataKab.Target) * 100).toFixed(2);
                 }
 
                 let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng]).addTo(map)
@@ -356,26 +388,25 @@
             document.getElementById('judulKecBot').innerText = `Top 10 Kecamatan Terendah (${labelLokasi})`;
             document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (${labelLokasi})`;
 
-            // Sortir Tertinggi dan Terendah
-            // Kalkulasi persentase dulu agar akurat
             let calcKec = filteredKec.map(k => {
-                return { ...k, persen: (k[currentMetric] / k.Target) * 100 }
+                let target = k.Target || 0;
+                let capaian = k[currentMetric] || 0;
+                return { ...k, persen: target > 0 ? (capaian / target) * 100 : 0 }
             });
 
-            // Top 10
+            // Top & Bottom 10
             let top10Kec = [...calcKec].sort((a, b) => b.persen - a.persen).slice(0, 10);
-            // Bottom 10 (Hindari duplikasi jika data sedikit)
             let bot10Kec = [...calcKec].sort((a, b) => a.persen - b.persen).slice(0, 10);
 
             if(currentMetric !== 'MOW'){
-                renderChartKecamatan(top10Kec, 'kecamatanTopChart', '#28a745'); // Hijau
-                renderChartKecamatan(bot10Kec, 'kecamatanBotChart', '#dc3545'); // Merah
+                renderChartKecamatan(top10Kec, 'kecamatanTopChart', '#28a745'); 
+                renderChartKecamatan(bot10Kec, 'kecamatanBotChart', '#dc3545'); 
                 renderTableDesa(filteredDesa);
             }
         }
 
         // ==========================================
-        // CHART CHART CHART
+        // CHART & TABEL (RENDERER)
         // ==========================================
         function createBarChart(ctxId, chartObj, labels, dataArr, bgColor, isHorizontal = false) {
             const ctx = document.getElementById(ctxId).getContext('2d');
@@ -403,7 +434,6 @@
                 }
             };
 
-            // Tambahkan fitur klik khusus untuk Kab
             if(ctxId === 'kabupatenChart'){
                 options.onClick = (e, elements) => {
                     if (elements.length > 0) filterDashboardByKabupaten(labels[elements[0].index]);
@@ -414,21 +444,38 @@
         }
 
         function renderChartNasional() {
-            // Sort data nasional dari tertinggi
-            let sortedData = [...dataNasional].sort((a, b) => b[currentMetric] - a[currentMetric]);
+            // Jika data nasional kosong untuk tanggal tersebut
+            if(!dataNasional || dataNasional.length === 0) {
+                if(chartNasional) chartNasional.destroy();
+                return;
+            }
+
+            // Asumsi isi API_Nasional: persentase angka desimal mentah (ex: 0.85 untuk 85%) atau langsung 85
+            let sortedData = [...dataNasional].sort((a, b) => {
+                let valA = parseFloat(a[currentMetric]) || 0;
+                let valB = parseFloat(b[currentMetric]) || 0;
+                return valB - valA;
+            });
+
             let labels = sortedData.map(d => d.Provinsi);
-            let dataArr = sortedData.map(d => d[currentMetric]);
+            let dataArr = sortedData.map(d => {
+                let val = parseFloat(d[currentMetric]) || 0;
+                // Jika data berbentuk desimal (0-1), kalikan 100
+                return val <= 1 ? (val * 100).toFixed(1) : val.toFixed(1); 
+            });
             
-            // Highlight Bali
-            let bgColors = labels.map(prov => prov === "Bali" ? "#ffc107" : "#004a99");
+            let bgColors = labels.map(prov => prov.toUpperCase() === "BALI" ? "#ffc107" : "#004a99");
 
             chartNasional = createBarChart('nasionalChart', chartNasional, labels, dataArr, bgColors, true);
         }
 
         function renderChartKabupaten(data) {
             let labels = data.map(d => d.Kabupaten);
-            // Hitung persentase
-            let dataArr = data.map(d => ((d[currentMetric] / d.Target)*100).toFixed(1));
+            let dataArr = data.map(d => {
+                let target = d.Target || 0;
+                let capaian = d[currentMetric] || 0;
+                return target > 0 ? ((capaian / target)*100).toFixed(1) : 0;
+            });
             chartKab = createBarChart('kabupatenChart', chartKab, labels, dataArr, '#004a99');
         }
 
@@ -444,15 +491,16 @@
             tbody.innerHTML = ''; 
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Data tidak ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Data tidak ditemukan untuk wilayah dan tanggal ini.</td></tr>';
                 return;
             }
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                let target = row.TargetKec;
-                let capaian = row[currentMetric];
-                let persen = ((capaian / target) * 100).toFixed(2);
+                // Pastikan key ini sesuai dengan Header di Sheet API_Desa
+                let target = row.TargetKec || 0;
+                let capaian = row[currentMetric] || 0;
+                let persen = target > 0 ? ((capaian / target) * 100).toFixed(2) : "0.00";
                 
                 let colorBar = persen >= 10 ? "#28a745" : (persen >= 5 ? "#ffc107" : "#dc3545"); 
                 let bgStyle = `background: linear-gradient(90deg, ${colorBar} ${persen}%, transparent ${persen}%);`;
