@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plugin Chart.js Datalabels untuk memunculkan angka di batang -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <!-- Leaflet CSS untuk Peta -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -20,14 +22,31 @@
             min-height: 100vh;
         }
         
-        /* Styling Header */
+        /* HEADER STICKY */
         .header-custom { 
             background-color: #004a99; 
             color: white; 
-            padding: 15px 30px; 
+            padding: 10px 20px; /* Padding dipaskan agar tidak terlalu tinggi */
+            position: sticky;
+            top: 0;
+            z-index: 1030; /* Agar selalu di atas peta dan elemen lain */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        /* Styling Kotak Konten (Sesuai Wireframe biru kaku) */
+        /* FOOTER STICKY */
+        .footer-custom {
+            background-color: #004a99;
+            color: white;
+            text-align: center;
+            padding: 8px 0;
+            margin-top: auto;
+            font-size: 0.9rem;
+            position: sticky;
+            bottom: 0;
+            z-index: 1030;
+        }
+
+        /* Styling Kotak Konten */
         .card-custom {
             border: 2px solid #0000ff;
             border-radius: 0;
@@ -44,7 +63,7 @@
             z-index: 1;
         }
 
-        /* Tinggi spesifik untuk chart agar proporsional */
+        /* Tinggi spesifik chart */
         .chart-container {
             position: relative;
             height: 220px;
@@ -55,68 +74,52 @@
             background-color: #dbeaff;
             text-align: center;
             vertical-align: middle;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .table-custom td {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             vertical-align: middle;
         }
 
-        /* Footer */
-        .footer-custom {
-            background-color: #004a99;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            margin-top: auto;
-            font-size: 0.9rem;
-        }
-
         /* Pointer untuk elemen yang bisa diklik */
-        .clickable {
-            cursor: pointer;
-        }
+        .clickable { cursor: pointer; }
         
-        /* Tombol Reset Filter */
+        /* Tombol Reset Filter Peta */
         #resetFilterBtn {
             display: none;
             position: absolute;
             top: 10px;
             right: 10px;
-            z-index: 10;
+            z-index: 400; /* Leaflet UI z-index is around 400 */
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header (Sticky) -->
     <header class="header-custom d-flex flex-wrap align-items-center justify-content-between">
-        <!-- Kiri Atas: Logo & Filter Tanggal -->
-        <div class="d-flex flex-column" style="width: 25%;">
-            <div class="d-flex align-items-center mb-2">
-                <img src="./assets/images/logo-kemendukbangga24-1200.webp" alt="Logo Kemendukbangga" style="height: 60px; width: auto; object-fit: contain; margin-right: 15px;">
-                <span class="fw-bold" style="line-height: 1.2;">Logo<br>Kemendukbangga</span>
-            </div>
-            <!-- Filter Tanggal Update -->
-            <div class="d-flex align-items-center bg-light text-dark p-1 rounded" style="width: fit-content;">
-                <span class="ms-1 me-2" style="font-size: 0.8rem; font-weight: bold;">Data Update:</span>
-                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.8rem;">
-                    <option value="all">8 Juni - 12 Juli 2026</option>
-                    <option value="2026-06-08">8 Juni 2026</option>
-                    <option value="2026-06-09">9 Juni 2026</option>
-                    <!-- Opsi ini nantinya bisa di-generate dinamis via JS -->
-                </select>
-            </div>
+        
+        <!-- Kiri: Logo -->
+        <div class="d-flex align-items-center" style="width: 25%; min-width: 200px;">
+            <img src="./assets/images/logo-kemendukbangga24-1200_2.webp" alt="Logo Kemendukbangga" style="height: 50px; width: auto; object-fit: contain; margin-right: 15px;">
+            <span class="fw-bold" style="line-height: 1.2; font-size: 0.9rem;">Logo<br>Kemendukbangga</span>
         </div>
         
         <!-- Tengah: Judul -->
-        <div class="text-center flex-grow-1" style="width: 50%;">
-            <h3 class="m-0 fw-bold">DASHBOARD YANKB HARGANAS PROVINSI BALI</h3>
-            <h4 class="m-0">8 JUNI - 12 JULI 2026</h4>
+        <div class="text-center flex-grow-1" style="width: 50%; min-width: 300px;">
+            <h4 class="m-0 fw-bold">DASHBOARD YANKB HARGANAS PROVINSI BALI</h4>
+            <h5 class="m-0">8 JUNI - 12 JULI 2026</h5>
         </div>
-        
-        <!-- Kanan Atas: Spacer agar judul tetap di tengah -->
-        <div style="width: 25%;"></div>
+
+        <!-- Kanan: Filter Data Update -->
+        <div class="d-flex justify-content-end align-items-center" style="width: 25%; min-width: 250px;">
+            <div class="d-flex align-items-center bg-light text-dark p-1 rounded">
+                <span class="ms-1 me-2 text-nowrap" style="font-size: 0.8rem; font-weight: bold;">Data Update:</span>
+                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;">
+                    <!-- Opsi akan di-generate otomatis oleh Javascript -->
+                </select>
+            </div>
+        </div>
     </header>
 
     <!-- Konten Utama -->
@@ -133,9 +136,9 @@
 
             <!-- Kolom Kanan: 2 Chart -->
             <div class="col-lg-5 d-flex flex-column gap-3">
-                <!-- Chart Kabupaten (9 Kabupaten) -->
+                <!-- Chart Kabupaten -->
                 <div class="card card-custom flex-fill p-2">
-                    <h6 class="text-center fw-bold mt-2">Capaian 9 Kabupaten/Kota <br><small class="text-muted fw-normal">(Klik batang grafik untuk filter)</small></h6>
+                    <h6 class="text-center fw-bold mt-2">Capaian Kabupaten/Kota <br><small class="text-muted fw-normal">(Klik batang grafik untuk filter)</small></h6>
                     <div class="chart-container">
                         <canvas id="kabupatenChart" class="clickable"></canvas>
                     </div>
@@ -143,7 +146,7 @@
                 
                 <!-- Chart Kecamatan (Top 10) -->
                 <div class="card card-custom flex-fill p-2">
-                    <h6 class="text-center fw-bold mt-2" id="judulKecamatan">Top 10 Capaian Kecamatan Tertinggi</h6>
+                    <h6 class="text-center fw-bold mt-2" id="judulKecamatan">Top 10 Capaian Kecamatan Tertinggi (Provinsi)</h6>
                     <div class="chart-container">
                         <canvas id="kecamatanChart"></canvas>
                     </div>
@@ -155,7 +158,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom p-0">
-                    <h5 class="text-center fw-bold p-3 m-0 border-bottom" id="judulDesa">Capaian Desa/Kelurahan</h5>
+                    <h6 class="text-center fw-bold p-3 m-0 border-bottom" id="judulDesa">Capaian Desa/Kelurahan (Provinsi)</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover table-custom m-0" id="tabelDesa">
                             <thead>
@@ -182,17 +185,54 @@
 
     </div>
 
-    <!-- Footer -->
+    <!-- Footer (Sticky) -->
     <footer class="footer-custom">
-        timjakbkrbalicopyright2026
+        timjakbkrbali&copy;2026
     </footer>
 
-    <!-- Leaflet & Chart.js Scripts -->
+    <!-- Leaflet & Script Khusus -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
         // ==========================================
-        // 1. DUMMY DATA LENGKAP & RELASIONAL
+        // GENERATE DROPDOWN TANGGAL OTOMATIS
+        // ==========================================
+        function generateDateOptions() {
+            const select = document.getElementById('dateFilter');
+            const bulanIndo = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+            
+            // Opsi Default (Semua Tanggal)
+            let optAll = document.createElement('option');
+            optAll.value = "all";
+            optAll.text = "8 JUNI - 12 JULI 2026";
+            select.appendChild(optAll);
+
+            // Loop Tanggal 8 Juni s/d 12 Juli 2026
+            let startDate = new Date(2026, 5, 8); // Bulan index 5 = Juni
+            let endDate = new Date(2026, 6, 12);  // Bulan index 6 = Juli
+
+            while (startDate <= endDate) {
+                let d = startDate.getDate();
+                let m = bulanIndo[startDate.getMonth()];
+                let y = startDate.getFullYear();
+                
+                let opt = document.createElement('option');
+                opt.text = `${d} ${m} ${y} PUKUL 15.00 WIB`;
+                // Value format YYYY-MM-DD
+                opt.value = `${y}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
+                
+                select.appendChild(opt);
+                
+                // Tambah 1 hari
+                startDate.setDate(startDate.getDate() + 1);
+            }
+        }
+
+        // Mendaftarkan Plugin DataLabels ke Chart.js secara global
+        Chart.register(ChartDataLabels);
+
+        // ==========================================
+        // DUMMY DATA LENGKAP 
         // ==========================================
         const dataKabupaten = [
             { Kabupaten: "Badung", Capaian: 800 }, { Kabupaten: "Bangli", Capaian: 450 },
@@ -202,7 +242,6 @@
             { Kabupaten: "Tabanan", Capaian: 850 }
         ];
 
-        // Simulasi data Kecamatan (memiliki properti Kabupaten)
         const dataKecamatan = [
             { Kabupaten: "Jembrana", Kecamatan: "Negara", Capaian: 150 },
             { Kabupaten: "Jembrana", Kecamatan: "Mendoyo", Capaian: 120 },
@@ -216,10 +255,8 @@
             { Kabupaten: "Buleleng", Kecamatan: "Sawan", Capaian: 210 },
             { Kabupaten: "Gianyar", Kecamatan: "Ubud", Capaian: 190 },
             { Kabupaten: "Bangli", Kecamatan: "Kintamani", Capaian: 140 }
-            // Tambahkan data dummy lainnya...
         ];
 
-        // Simulasi data Desa (memiliki relasi Kabupaten & Kecamatan)
         const dataDesa = [
             { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Baler Bale Agung", TargetKec: 500, Capaian: 50 },
             { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Banjar Tengah", TargetKec: 500, Capaian: 45 },
@@ -229,7 +266,6 @@
             { Kabupaten: "Buleleng", Kecamatan: "Sawan", Desa: "Sangsit", TargetKec: 700, Capaian: 60 }
         ];
 
-        // Koordinat 9 Kabupaten/Kota di Bali untuk Peta
         const koordinatKabupaten = {
             "Buleleng": { lat: -8.2045, lng: 114.9616 },
             "Jembrana": { lat: -8.3204, lng: 114.6540 },
@@ -242,22 +278,18 @@
             "Karangasem": { lat: -8.3842, lng: 115.5406 }
         };
 
-        // Variabel Global
         let map;
         let chartKab, chartKec;
-        let markers = {};
 
         // ==========================================
-        // 2. INISIALISASI DASHBOARD
+        // INISIALISASI DASHBOARD & PETA
         // ==========================================
         function initDashboard() {
+            generateDateOptions(); // Panggil fungsi pembuat filter tanggal
             initMap();
-            renderDashboard("Semua"); // Render awal untuk semua kabupaten
+            renderDashboard("Semua");
         }
 
-        // ==========================================
-        // 3. FUNGSI PETA (LEAFLET)
-        // ==========================================
         function initMap() {
             map = L.map('map').setView([-8.409518, 115.188919], 9);
             
@@ -265,29 +297,29 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-            // Membuat marker yang bisa diklik
             for (let kab in koordinatKabupaten) {
+                // Cari angka capaian per kabupaten dari array dataKabupaten
+                let capaianAngka = dataKabupaten.find(d => d.Kabupaten === kab)?.Capaian || 0;
+
                 let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng])
                     .addTo(map)
-                    .bindTooltip(`<b>${kab}</b> <br> <small>Klik untuk detail</small>`, { permanent: true, direction: 'top', className: 'bg-white border-primary border' });
+                    // Tooltip sekarang menampilkan angka progres capaian
+                    .bindTooltip(`
+                        <div class="text-center">
+                            <b>${kab}</b><br>
+                            <span class="badge bg-primary mt-1" style="font-size:0.9rem;">Capaian: ${capaianAngka}</span>
+                        </div>
+                    `, { permanent: true, direction: 'top', className: 'bg-white border-primary border p-1' });
                 
-                // Event saat marker peta diklik
                 marker.on('click', function() {
                     filterDashboardByKabupaten(kab);
                 });
-
-                markers[kab] = marker;
             }
         }
 
-        // ==========================================
-        // 4. LOGIKA FILTER & RENDER KOMPONEN
-        // ==========================================
         function renderDashboard(filterKabupaten) {
-            // A. Siapkan Data Kabupaten (Tetap 9, tidak difilter agar grafiknya tidak hilang)
             renderChartKabupaten(dataKabupaten);
 
-            // B. Filter Data Kecamatan
             let filteredKec = dataKecamatan;
             let filteredDesa = dataDesa;
 
@@ -295,30 +327,25 @@
                 filteredKec = dataKecamatan.filter(k => k.Kabupaten === filterKabupaten);
                 filteredDesa = dataDesa.filter(d => d.Kabupaten === filterKabupaten);
                 
-                document.getElementById('judulKecamatan').innerText = `Top 10 Capaian Kecamatan di ${filterKabupaten}`;
-                document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan di ${filterKabupaten}`;
-                document.getElementById('resetFilterBtn').style.display = 'block'; // Munculkan tombol reset
+                document.getElementById('judulKecamatan').innerText = `Top 10 Capaian Kecamatan Tertinggi (${filterKabupaten})`;
+                document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (${filterKabupaten})`;
+                document.getElementById('resetFilterBtn').style.display = 'block'; 
             } else {
                 document.getElementById('judulKecamatan').innerText = `Top 10 Capaian Kecamatan Tertinggi (Provinsi)`;
                 document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (Provinsi)`;
                 document.getElementById('resetFilterBtn').style.display = 'none';
             }
 
-            // Urutkan Tertinggi & Ambil Top 10 Kecamatan
             filteredKec.sort((a, b) => b.Capaian - a.Capaian);
             let top10Kec = filteredKec.slice(0, 10);
 
-            // C. Render Chart & Table
             renderChartKecamatan(top10Kec);
             renderTableDesa(filteredDesa);
         }
 
         function filterDashboardByKabupaten(kabName) {
-            // Zoom peta ke area yang diklik
             let latlng = koordinatKabupaten[kabName];
             map.flyTo([latlng.lat, latlng.lng], 11, { duration: 1.5 });
-            
-            // Render ulang komponen di bawahnya
             renderDashboard(kabName);
         }
 
@@ -328,12 +355,11 @@
         }
 
         // ==========================================
-        // 5. RENDER CHART.JS & HTML TABLE
+        // FUNGSI RENDER CHART & TABLE
         // ==========================================
         function renderChartKabupaten(data) {
             const ctx = document.getElementById('kabupatenChart').getContext('2d');
-            
-            if (chartKab) chartKab.destroy(); // Hancurkan chart lama sebelum buat baru
+            if (chartKab) chartKab.destroy(); 
 
             chartKab = new Chart(ctx, {
                 type: 'bar',
@@ -349,13 +375,29 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } },
-                    // Event onClick pada bar chart
+                    layout: {
+                        padding: { top: 25 } // Spasi agar angka tidak terpotong border atas
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        // Konfigurasi Label Angka di atas batang
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round,
+                            font: { weight: 'bold', size: 11 },
+                            color: '#333'
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grace: '5%' // Menambah sedikit ruang kosong di puncak skala Y
+                        } 
+                    },
                     onClick: (event, elements) => {
                         if (elements.length > 0) {
-                            const dataIndex = elements[0].index;
-                            const clickedKab = chartKab.data.labels[dataIndex];
+                            const clickedKab = chartKab.data.labels[elements[0].index];
                             filterDashboardByKabupaten(clickedKab);
                         }
                     }
@@ -365,7 +407,6 @@
 
         function renderChartKecamatan(data) {
             const ctx = document.getElementById('kecamatanChart').getContext('2d');
-            
             if (chartKec) chartKec.destroy();
 
             chartKec = new Chart(ctx, {
@@ -375,15 +416,33 @@
                     datasets: [{
                         label: 'Capaian',
                         data: data.map(d => d.Capaian),
-                        backgroundColor: '#28a745', // Warna hijau beda dengan kab
+                        backgroundColor: '#28a745', 
                         borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    layout: {
+                        padding: { top: 25 }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        // Konfigurasi Label Angka di atas batang
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round,
+                            font: { weight: 'bold', size: 11 },
+                            color: '#333'
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grace: '5%'
+                        } 
+                    }
                 }
             });
         }
@@ -399,10 +458,16 @@
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                
-                // Menghitung persentase
                 let persen = ((row.Capaian / row.TargetKec) * 100).toFixed(2);
                 
+                // Menentukan warna background indikator bar persis di gambar
+                let colorBar = "#28a745"; // Hijau
+                if (persen < 10) colorBar = "#ffc107"; // Kuning 
+                if (persen < 5) colorBar = "#dc3545"; // Merah (Opsional)
+
+                // Membuat efek progress bar di dalam cell tabel
+                let bgStyle = `background: linear-gradient(90deg, ${colorBar} ${persen}%, transparent ${persen}%);`;
+
                 tr.innerHTML = `
                     <td class="text-center">${index + 1}</td>
                     <td>${row.Kabupaten}</td>
@@ -410,17 +475,17 @@
                     <td class="fw-bold">${row.Desa}</td>
                     <td class="text-end">${row.TargetKec}</td>
                     <td class="text-end">${row.Capaian}</td>
-                    <td class="text-center">
-                        <span class="badge bg-${persen >= 10 ? 'success' : 'warning'} text-dark w-100 py-2">
-                            ${persen}%
-                        </span>
+                    <td class="text-center position-relative">
+                        <!-- Indikator Bar -->
+                        <div style="${bgStyle} width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0.3; z-index: 1;"></div>
+                        <!-- Teks Angka -->
+                        <span style="position: relative; z-index: 2; font-weight: bold;">${persen}%</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Jalankan saat halaman siap
         document.addEventListener('DOMContentLoaded', initDashboard);
 
     </script>
