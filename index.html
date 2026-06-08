@@ -3,140 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard HARGANAS 2026 - Provinsi Bali</title>
+    <title>Dashboard YANKB HARGANAS - Provinsi Bali</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS untuk Peta -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        body { background-color: #f4f7f6; }
-        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
-        .header-title { background-color: #004a99; color: white; padding: 20px 0; margin-bottom: 30px; text-align: center; }
+        body { 
+            background-color: #f4f7f6; 
+        }
+        
+        /* Styling Header */
+        .header-custom { 
+            background-color: #004a99; 
+            color: white; 
+            padding: 15px 30px; 
+        }
+        
+        /* Styling Kotak Konten (Sesuai Wireframe biru) */
+        .card-custom {
+            border: 3px solid #0000ff;
+            border-radius: 0; /* Mengubah sudut menjadi kaku seperti sketsa */
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Area Peta */
+        #map { 
+            width: 100%; 
+            height: 100%; 
+            min-height: 400px;
+            z-index: 1; /* Mencegah bentrok dengan dropdown Bootstrap */
+        }
+
+        /* Tinggi spesifik untuk chart agar proporsional */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .table-custom th {
+            background-color: #dbeaff;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header-title">
-        <h2>Dashboard Progress Pelayanan KB HARGANAS 2026</h2>
-        <p>Provinsi Bali | Update Data Dinamis</p>
-    </div>
+    <!-- Header -->
+    <header class="header-custom d-flex align-items-center justify-content-between">
+        <!-- Spacer kiri agar teks tengah seimbang dengan logo di kanan -->
+        <div style="width: 100px;"></div> 
+        
+        <!-- Judul Tengah -->
+        <div class="text-center flex-grow-1">
+            <h2 class="m-0 fw-bold">DASHBOARD YANKB HARGANAS PROVINSI BALI</h2>
+            <h3 class="m-0">8 JUNI - 8 JULI 2026</h3>
+        </div>
+        
+        <!-- Logo Kanan Atas -->
+        <div style="width: 100px; text-align: right;">
+            <img src="./assets/images/logo-kemendukbangga24-1200.webp" alt="Logo Kemendukbangga" style="height: 70px; width: auto; object-fit: contain;">
+        </div>
+    </header>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card p-3">
-                    <h4 class="text-center">Grafik Capaian Total per Kabupaten</h4>
-                    <canvas id="barChart" height="100"></canvas>
+    <!-- Konten Utama -->
+    <div class="container-fluid p-4">
+        
+        <!-- Baris Atas: Peta dan Chart -->
+        <div class="row mb-4 align-items-stretch">
+            
+            <!-- Kolom Kiri: Peta Bali -->
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <div class="card card-custom h-100 p-1">
+                    <div id="map"></div>
                 </div>
             </div>
+
+            <!-- Kolom Kanan: 2 Chart bersusun -->
+            <div class="col-lg-4 d-flex flex-column gap-3">
+                <!-- Chart Kabupaten -->
+                <div class="card card-custom flex-fill p-2">
+                    <h6 class="text-center fw-bold mt-2">Capaian Kabupaten</h6>
+                    <div class="chart-container">
+                        <canvas id="kabupatenChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Chart Kecamatan -->
+                <div class="card card-custom flex-fill p-2">
+                    <h6 class="text-center fw-bold mt-2">Capaian Kecamatan</h6>
+                    <div class="chart-container">
+                        <canvas id="kecamatanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
+        <!-- Baris Bawah: Tabel Desa/Kelurahan -->
         <div class="row">
-            <div class="col-md-12">
-                <div class="card p-3">
-                    <h4 class="text-center mb-3">Tabel Rekapitulasi Kabupaten</h4>
+            <div class="col-12">
+                <div class="card card-custom p-0">
+                    <h5 class="text-center fw-bold p-3 m-0 border-bottom">Capaian Desa/Kelurahan</h5>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover" id="dataTable">
-                            <thead class="table-primary">
+                        <table class="table table-bordered table-striped table-custom m-0" id="tabelDesa">
+                            <thead>
                                 <tr>
-                                    <th>No</th>
-                                    <th>Kabupaten</th>
-                                    <th>Target Total</th>
-                                    <th>Capaian Total</th>
-                                    <th>Persentase (%)</th>
+                                    <th width="5%">No</th>
+                                    <th width="30%">Kabupaten (Contoh Kolom)</th>
+                                    <th width="20%">Target Total</th>
+                                    <th width="20%">Capaian Total</th>
+                                    <th width="25%">Persentase (%)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="5" class="text-center">Memuat data dari server...</td></tr>
+                                <tr>
+                                    <td colspan="5" class="text-center text-danger py-4">Gagal memuat data. Mengambil data dari server...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <script>
-        // MASUKKAN URL WEB APP DARI GOOGLE APPS SCRIPT DI SINI
-        const GOOGLE_SHEET_API_URL = 'PASTE_URL_WEB_APP_ANDA_DISINI';
+    <!-- Leaflet JS untuk Peta -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        async function fetchData() {
+    <script>
+        // ==========================================
+        // 1. INISIALISASI PETA PULAU BALI (LEAFLET)
+        // ==========================================
+        const map = L.map('map').setView([-8.409518, 115.188919], 9); // Kordinat pusat Bali
+
+        // Menggunakan OpenStreetMap sebagai dasar peta
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Contoh menambahkan label penanda (Marker) per Kabupaten
+        const kabupatenMarkers = [
+            { nama: "Buleleng", lat: -8.2045, lng: 114.9616 },
+            { nama: "Jembrana", lat: -8.3204, lng: 114.6540 },
+            { nama: "Tabanan", lat: -8.4503, lng: 115.0345 },
+            { nama: "Badung", lat: -8.5835, lng: 115.1775 },
+            { nama: "Denpasar", lat: -8.6705, lng: 115.2126 },
+            { nama: "Gianyar", lat: -8.4682, lng: 115.3090 },
+            { nama: "Bangli", lat: -8.2542, lng: 115.3547 },
+            { nama: "Klungkung", lat: -8.5369, lng: 115.4124 },
+            { nama: "Karangasem", lat: -8.3842, lng: 115.5406 }
+        ];
+
+        kabupatenMarkers.forEach(kab => {
+            // Menambahkan marker dengan label tooltip yang selalu terbuka
+            L.marker([kab.lat, kab.lng]).addTo(map)
+             .bindTooltip(`<b>${kab.nama}</b>`, { permanent: true, direction: 'top', className: 'bg-white border-primary border' });
+        });
+
+
+        // ==========================================
+        // 2. FUNGSI FETCH DATA DARI API (DUMMY SETUP)
+        // ==========================================
+        const BASE_API_URL = 'PASTE_URL_WEB_APP_ANDA_DISINI'; // Ganti dengan URL dari Apps Script
+
+        async function initDashboard() {
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL);
-                const data = await response.json();
+                /*
+                // KODE ASLI UNTUK MEMANGGIL API (Dikomnetari karena URL masih kosong)
+                const resKabupaten = await fetch(`${BASE_API_URL}?sheet=API_Kabupaten`);
+                const dataKabupaten = await resKabupaten.json();
                 
-                renderTable(data);
-                renderChart(data);
+                const resKecamatan = await fetch(`${BASE_API_URL}?sheet=API_Kecamatan`);
+                const dataKecamatan = await resKecamatan.json();
+
+                const resDesa = await fetch(`${BASE_API_URL}?sheet=API_Desa`);
+                const dataDesa = await resDesa.json();
+                */
+
+                // DUMMY DATA SEMENTARA (Agar chart & tabel terlihat bentuknya)
+                const dataKabupaten = [
+                    { Nama: "Jembrana", Target: 626, Capaian: 387 },
+                    { Nama: "Tabanan", Target: 952, Capaian: 557 },
+                    { Nama: "Denpasar", Target: 2182, Capaian: 516 }
+                ];
+                const dataKecamatan = [
+                    { Nama: "Negara", Target: 231, Capaian: 102 },
+                    { Nama: "Mendoyo", Target: 111, Capaian: 70 },
+                    { Nama: "Melaya", Target: 76, Capaian: 24 }
+                ];
+                const dataDesa = [
+                    { Kabupaten: "Jembrana (Desa A)", Target_Total: 50, Capaian_Total: 40, Persentase_Total: 0.80 },
+                    { Kabupaten: "Tabanan (Desa B)", Target_Total: 100, Capaian_Total: 50, Persentase_Total: 0.50 }
+                ];
+
+                // Render Komponen
+                renderChart('kabupatenChart', dataKabupaten, 'Capaian Kabupaten');
+                renderChart('kecamatanChart', dataKecamatan, 'Capaian Kecamatan');
+                renderTable(dataDesa);
+
             } catch (error) {
-                console.error('Error fetching data:', error);
-                document.querySelector('#dataTable tbody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>';
+                console.error('Error memuat data:', error);
             }
         }
 
+        // ==========================================
+        // 3. FUNGSI RENDER CHART & TABEL
+        // ==========================================
+        function renderChart(canvasId, data, label) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.Nama),
+                    datasets: [{
+                        label: label,
+                        data: data.map(d => d.Capaian),
+                        backgroundColor: '#004a99',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
         function renderTable(data) {
-            const tbody = document.querySelector('#dataTable tbody');
-            tbody.innerHTML = ''; // Kosongkan text loading
+            const tbody = document.querySelector('#tabelDesa tbody');
+            tbody.innerHTML = ''; 
 
             data.forEach((row, index) => {
-                // Pastikan nama properti sesuai dengan header di Sheet "API_Kabupaten"
                 const tr = document.createElement('tr');
+                let persen = (row.Persentase_Total * 100).toFixed(2);
                 
-                // Logika warna untuk persentase (Opsional, menyesuaikan gambar Anda)
-                let colorClass = "";
-                let persen = parseFloat(row.Persentase_Total * 100).toFixed(2); // Asumsi format desimal di sheet
-                
-                if(persen < 50) colorClass = "bg-danger text-white";
-                else if(persen >= 50 && persen < 80) colorClass = "bg-warning";
-                else if(persen >= 80) colorClass = "bg-success text-white";
-
                 tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td><b>${row.Kabupaten}</b></td>
-                    <td>${row.Target_Total}</td>
-                    <td>${row.Capaian_Total}</td>
-                    <td class="${colorClass}">${persen}%</td>
+                    <td class="text-center">${index + 1}</td>
+                    <td>${row.Kabupaten}</td>
+                    <td class="text-end">${row.Target_Total}</td>
+                    <td class="text-end">${row.Capaian_Total}</td>
+                    <td class="text-center">${persen}%</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function renderChart(data) {
-            // Menyiapkan data untuk Chart.js
-            const labels = data.map(row => row.Kabupaten);
-            const capaianData = data.map(row => row.Capaian_Total);
-            const targetData = data.map(row => row.Target_Total);
-
-            const ctx = document.getElementById('barChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Capaian Total',
-                            data: capaianData,
-                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Target Total',
-                            data: targetData,
-                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        }
-
-        // Panggil fungsi saat halaman dimuat
-        fetchData();
+        // Jalankan saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>
