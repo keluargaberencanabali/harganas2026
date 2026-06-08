@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard YANKB HARGANAS - Provinsi Bali</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin Chart.js Datalabels untuk memunculkan angka di batang -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- Leaflet CSS untuk Peta -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -26,10 +22,10 @@
         .header-custom { 
             background-color: #004a99; 
             color: white; 
-            padding: 10px 20px; /* Padding dipaskan agar tidak terlalu tinggi */
+            padding: 10px 20px; 
             position: sticky;
             top: 0;
-            z-index: 1030; /* Agar selalu di atas peta dan elemen lain */
+            z-index: 1030; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
@@ -81,52 +77,42 @@
             vertical-align: middle;
         }
 
-        /* Pointer untuk elemen yang bisa diklik */
         .clickable { cursor: pointer; }
         
-        /* Tombol Reset Filter Peta */
         #resetFilterBtn {
             display: none;
             position: absolute;
             top: 10px;
             right: 10px;
-            z-index: 400; /* Leaflet UI z-index is around 400 */
+            z-index: 400; 
         }
     </style>
 </head>
 <body>
 
-    <!-- Header (Sticky) -->
     <header class="header-custom d-flex flex-wrap align-items-center justify-content-between">
         
-        <!-- Kiri: Logo -->
         <div class="d-flex align-items-center" style="width: 25%; min-width: 200px;">
-            <img src="./assets/images/logo-kemendukbangga24-1200_2.webp" alt="Logo Kemendukbangga" style="height: 50px; width: auto; object-fit: contain; margin-right: 15px;">
-            <span class="fw-bold" style="line-height: 1.2; font-size: 0.9rem;">Logo<br>Kemendukbangga</span>
+            <img src="./logo-kemendukbangga24-1200.webp" alt="Logo Kemendukbangga" style="height: 50px; width: auto; object-fit: contain;">
         </div>
         
-        <!-- Tengah: Judul -->
         <div class="text-center flex-grow-1" style="width: 50%; min-width: 300px;">
             <h4 class="m-0 fw-bold">DASHBOARD YANKB HARGANAS PROVINSI BALI</h4>
             <h5 class="m-0">8 JUNI - 12 JULI 2026</h5>
         </div>
 
-        <!-- Kanan: Filter Data Update -->
         <div class="d-flex justify-content-end align-items-center" style="width: 25%; min-width: 250px;">
             <div class="d-flex align-items-center bg-light text-dark p-1 rounded">
                 <span class="ms-1 me-2 text-nowrap" style="font-size: 0.8rem; font-weight: bold;">Data Update:</span>
                 <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;">
-                    <!-- Opsi akan di-generate otomatis oleh Javascript -->
-                </select>
+                    </select>
             </div>
         </div>
     </header>
 
-    <!-- Konten Utama -->
     <div class="container-fluid p-4">
         
         <div class="row mb-4 align-items-stretch">
-            <!-- Kolom Kiri: Peta Bali -->
             <div class="col-lg-7 mb-4 mb-lg-0">
                 <div class="card card-custom h-100 p-1">
                     <button id="resetFilterBtn" class="btn btn-sm btn-danger" onclick="resetFilter()">Tampilkan Semua Kabupaten</button>
@@ -134,9 +120,7 @@
                 </div>
             </div>
 
-            <!-- Kolom Kanan: 2 Chart -->
             <div class="col-lg-5 d-flex flex-column gap-3">
-                <!-- Chart Kabupaten -->
                 <div class="card card-custom flex-fill p-2">
                     <h6 class="text-center fw-bold mt-2">Capaian Kabupaten/Kota <br><small class="text-muted fw-normal">(Klik batang grafik untuk filter)</small></h6>
                     <div class="chart-container">
@@ -144,7 +128,6 @@
                     </div>
                 </div>
                 
-                <!-- Chart Kecamatan (Top 10) -->
                 <div class="card card-custom flex-fill p-2">
                     <h6 class="text-center fw-bold mt-2" id="judulKecamatan">Top 10 Capaian Kecamatan Tertinggi (Provinsi)</h6>
                     <div class="chart-container">
@@ -154,7 +137,6 @@
             </div>
         </div>
 
-        <!-- Baris Bawah: Tabel Desa/Kelurahan -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom p-0">
@@ -185,12 +167,10 @@
 
     </div>
 
-    <!-- Footer (Sticky) -->
     <footer class="footer-custom">
         timjakbkrbali&copy;2026
     </footer>
 
-    <!-- Leaflet & Script Khusus -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
@@ -201,12 +181,6 @@
             const select = document.getElementById('dateFilter');
             const bulanIndo = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
             
-            // Opsi Default (Semua Tanggal)
-            let optAll = document.createElement('option');
-            optAll.value = "all";
-            optAll.text = "8 JUNI - 12 JULI 2026";
-            select.appendChild(optAll);
-
             // Loop Tanggal 8 Juni s/d 12 Juli 2026
             let startDate = new Date(2026, 5, 8); // Bulan index 5 = Juni
             let endDate = new Date(2026, 6, 12);  // Bulan index 6 = Juli
@@ -228,18 +202,21 @@
             }
         }
 
-        // Mendaftarkan Plugin DataLabels ke Chart.js secara global
         Chart.register(ChartDataLabels);
 
         // ==========================================
-        // DUMMY DATA LENGKAP 
+        // DUMMY DATA (Target ditambahkan untuk hitung persentase Peta)
         // ==========================================
         const dataKabupaten = [
-            { Kabupaten: "Badung", Capaian: 800 }, { Kabupaten: "Bangli", Capaian: 450 },
-            { Kabupaten: "Buleleng", Capaian: 950 }, { Kabupaten: "Denpasar", Capaian: 1200 },
-            { Kabupaten: "Gianyar", Capaian: 750 }, { Kabupaten: "Jembrana", Capaian: 600 },
-            { Kabupaten: "Karangasem", Capaian: 550 }, { Kabupaten: "Klungkung", Capaian: 400 },
-            { Kabupaten: "Tabanan", Capaian: 850 }
+            { Kabupaten: "Badung", Capaian: 800, Target: 1000 }, 
+            { Kabupaten: "Bangli", Capaian: 450, Target: 500 },
+            { Kabupaten: "Buleleng", Capaian: 950, Target: 1200 }, 
+            { Kabupaten: "Denpasar", Capaian: 1200, Target: 1500 },
+            { Kabupaten: "Gianyar", Capaian: 750, Target: 1000 }, 
+            { Kabupaten: "Jembrana", Capaian: 600, Target: 800 },
+            { Kabupaten: "Karangasem", Capaian: 550, Target: 700 }, 
+            { Kabupaten: "Klungkung", Capaian: 400, Target: 500 },
+            { Kabupaten: "Tabanan", Capaian: 850, Target: 1000 }
         ];
 
         const dataKecamatan = [
@@ -285,7 +262,7 @@
         // INISIALISASI DASHBOARD & PETA
         // ==========================================
         function initDashboard() {
-            generateDateOptions(); // Panggil fungsi pembuat filter tanggal
+            generateDateOptions(); 
             initMap();
             renderDashboard("Semua");
         }
@@ -298,16 +275,20 @@
             }).addTo(map);
 
             for (let kab in koordinatKabupaten) {
-                // Cari angka capaian per kabupaten dari array dataKabupaten
-                let capaianAngka = dataKabupaten.find(d => d.Kabupaten === kab)?.Capaian || 0;
+                // Kalkulasi Persentase Capaian per Kabupaten
+                let dataKab = dataKabupaten.find(d => d.Kabupaten === kab);
+                let persen = "0.00";
+                
+                if(dataKab && dataKab.Target > 0) {
+                    persen = ((dataKab.Capaian / dataKab.Target) * 100).toFixed(2);
+                }
 
                 let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng])
                     .addTo(map)
-                    // Tooltip sekarang menampilkan angka progres capaian
                     .bindTooltip(`
                         <div class="text-center">
                             <b>${kab}</b><br>
-                            <span class="badge bg-primary mt-1" style="font-size:0.9rem;">Capaian: ${capaianAngka}</span>
+                            <span class="badge bg-primary mt-1" style="font-size:0.9rem;">${persen}%</span>
                         </div>
                     `, { permanent: true, direction: 'top', className: 'bg-white border-primary border p-1' });
                 
@@ -376,11 +357,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { top: 25 } // Spasi agar angka tidak terpotong border atas
+                        padding: { top: 25 } 
                     },
                     plugins: { 
                         legend: { display: false },
-                        // Konfigurasi Label Angka di atas batang
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
@@ -392,7 +372,7 @@
                     scales: { 
                         y: { 
                             beginAtZero: true,
-                            grace: '5%' // Menambah sedikit ruang kosong di puncak skala Y
+                            grace: '5%' 
                         } 
                     },
                     onClick: (event, elements) => {
@@ -428,7 +408,6 @@
                     },
                     plugins: { 
                         legend: { display: false },
-                        // Konfigurasi Label Angka di atas batang
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
@@ -460,12 +439,10 @@
                 const tr = document.createElement('tr');
                 let persen = ((row.Capaian / row.TargetKec) * 100).toFixed(2);
                 
-                // Menentukan warna background indikator bar persis di gambar
-                let colorBar = "#28a745"; // Hijau
-                if (persen < 10) colorBar = "#ffc107"; // Kuning 
-                if (persen < 5) colorBar = "#dc3545"; // Merah (Opsional)
+                let colorBar = "#28a745"; 
+                if (persen < 10) colorBar = "#ffc107"; 
+                if (persen < 5) colorBar = "#dc3545"; 
 
-                // Membuat efek progress bar di dalam cell tabel
                 let bgStyle = `background: linear-gradient(90deg, ${colorBar} ${persen}%, transparent ${persen}%);`;
 
                 tr.innerHTML = `
@@ -476,9 +453,7 @@
                     <td class="text-end">${row.TargetKec}</td>
                     <td class="text-end">${row.Capaian}</td>
                     <td class="text-center position-relative">
-                        <!-- Indikator Bar -->
                         <div style="${bgStyle} width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0.3; z-index: 1;"></div>
-                        <!-- Teks Angka -->
                         <span style="position: relative; z-index: 2; font-weight: bold;">${persen}%</span>
                     </td>
                 `;
