@@ -11,101 +11,56 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        body { 
-            background-color: #f4f7f6; 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        body { background-color: #f4f7f6; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* HEADER STICKY */
-        .header-custom { 
-            background-color: #004a99; 
-            color: white; 
-            padding: 10px 20px; 
-            position: sticky;
-            top: 0;
-            z-index: 1030; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        /* HEADER & FOOTER */
+        .header-custom { background-color: #004a99; color: white; padding: 10px 20px; position: sticky; top: 0; z-index: 1030; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .footer-custom { background-color: #004a99; color: white; text-align: center; padding: 8px 0; margin-top: auto; font-size: 0.9rem; position: sticky; bottom: 0; z-index: 1030; }
+
+        /* KOTAK KONTEN & PETA */
+        .card-custom { border: 2px solid #0000ff; border-radius: 0; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
+        #map { width: 100%; height: 100%; min-height: 400px; z-index: 1; }
         
-        /* FOOTER STICKY */
-        .footer-custom {
-            background-color: #004a99;
-            color: white;
-            text-align: center;
-            padding: 8px 0;
-            margin-top: auto;
-            font-size: 0.9rem;
-            position: sticky;
-            bottom: 0;
-            z-index: 1030;
-        }
+        /* KONTROL UKURAN GRAFIK */
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        .chart-container-national { position: relative; height: 400px; width: 100%; } /* Tinggi khusus agar bisa discroll jika perlu */
 
-        /* Styling Kotak Konten */
-        .card-custom {
-            border: 2px solid #0000ff;
-            border-radius: 0;
-            background-color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            position: relative;
-        }
+        /* TABEL */
+        .table-custom th { background-color: #dbeaff; text-align: center; vertical-align: middle; font-size: 0.85rem; }
+        .table-custom td { font-size: 0.85rem; vertical-align: middle; }
 
-        /* Area Peta */
-        #map { 
-            width: 100%; 
-            height: 100%; 
-            min-height: 450px;
-            z-index: 1;
+        /* KPI CARDS (KIRI) */
+        .kpi-card { 
+            border: 2px solid #004a99; border-radius: 5px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s; background-color: white; margin-bottom: 10px;
         }
-
-        /* Tinggi spesifik chart */
-        .chart-container {
-            position: relative;
-            height: 220px;
-            width: 100%;
-        }
-
-        .table-custom th {
-            background-color: #dbeaff;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 0.85rem;
-        }
-        .table-custom td {
-            font-size: 0.85rem;
-            vertical-align: middle;
-        }
-
-        .clickable { cursor: pointer; }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,74,153,0.3); }
+        .kpi-card h5 { margin: 0; font-size: 1rem; color: #555; }
+        .kpi-card h3 { margin: 10px 0 0 0; font-weight: bold; color: #004a99; }
         
-        #resetFilterBtn {
-            display: none;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 400; 
-        }
+        /* State Aktif untuk Card */
+        .kpi-card.active { background-color: #004a99; color: white; }
+        .kpi-card.active h5, .kpi-card.active h3 { color: white; }
+
+        #resetFilterBtn { display: none; position: absolute; top: 10px; right: 10px; z-index: 400; }
+        
+        /* Overlay jika MOW dipilih */
+        .mow-overlay { display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.9); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; font-weight: bold; color: #dc3545; text-align: center; padding: 20px;}
     </style>
 </head>
 <body>
 
     <header class="header-custom d-flex flex-wrap align-items-center justify-content-between">
-        
         <div class="d-flex align-items-center" style="width: 25%; min-width: 200px;">
             <img src="./logo-kemendukbangga24-1200.webp" alt="Logo Kemendukbangga" style="height: 50px; width: auto; object-fit: contain;">
         </div>
-        
         <div class="text-center flex-grow-1" style="width: 50%; min-width: 300px;">
             <h4 class="m-0 fw-bold">DASHBOARD YANKB HARGANAS PROVINSI BALI</h4>
             <h5 class="m-0">8 JUNI - 12 JULI 2026</h5>
         </div>
-
         <div class="d-flex justify-content-end align-items-center" style="width: 25%; min-width: 250px;">
             <div class="d-flex align-items-center bg-light text-dark p-1 rounded">
                 <span class="ms-1 me-2 text-nowrap" style="font-size: 0.8rem; font-weight: bold;">Data Update:</span>
-                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;">
-                    </select>
+                <select id="dateFilter" class="form-select form-select-sm" style="width: auto; font-size: 0.75rem; font-weight: bold;"></select>
             </div>
         </div>
     </header>
@@ -113,52 +68,91 @@
     <div class="container-fluid p-4">
         
         <div class="row mb-4 align-items-stretch">
-            <div class="col-lg-7 mb-4 mb-lg-0">
+            
+            <div class="col-lg-3 mb-4 mb-lg-0 d-flex flex-column">
+                <div class="card card-custom h-100 p-3 bg-light">
+                    <h5 class="text-center fw-bold mb-3 border-bottom pb-2">DATA CAPAIAN <br><small style="font-size: 0.8rem;" class="text-muted">(Klik untuk filter)</small></h5>
+                    
+                    <div class="kpi-card active" id="card_TOTAL" onclick="changeMetric('TOTAL')">
+                        <h5>PB TOTAL</h5>
+                        <h3 id="val_TOTAL">41.01%</h3>
+                    </div>
+                    <div class="kpi-card" id="card_KBPP" onclick="changeMetric('KBPP')">
+                        <h5>PB KBPP</h5>
+                        <h3 id="val_KBPP">41.08%</h3>
+                    </div>
+                    <div class="kpi-card" id="card_MKJP" onclick="changeMetric('MKJP')">
+                        <h5>PB MKJP</h5>
+                        <h3 id="val_MKJP">40.80%</h3>
+                    </div>
+                    <div class="kpi-card" id="card_MOW" onclick="changeMetric('MOW')">
+                        <h5>PB MOW</h5>
+                        <h3 id="val_MOW">35.50%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mb-4 mb-lg-0">
                 <div class="card card-custom h-100 p-1">
-                    <button id="resetFilterBtn" class="btn btn-sm btn-danger" onclick="resetFilter()">Tampilkan Semua Kabupaten</button>
+                    <button id="resetFilterBtn" class="btn btn-sm btn-danger" onclick="resetFilter()">Reset Filter Kabupaten</button>
                     <div id="map"></div>
                 </div>
             </div>
 
-            <div class="col-lg-5 d-flex flex-column gap-3">
-                <div class="card card-custom flex-fill p-2">
-                    <h6 class="text-center fw-bold mt-2">Capaian Kabupaten/Kota <br><small class="text-muted fw-normal">(Klik batang grafik untuk filter)</small></h6>
-                    <div class="chart-container">
-                        <canvas id="kabupatenChart" class="clickable"></canvas>
+            <div class="col-lg-4">
+                <div class="card card-custom h-100 p-2">
+                    <h6 class="text-center fw-bold mt-2">Capaian Nasional <span id="labelNasional">PB TOTAL</span><br><small class="text-muted fw-normal">(Highlight Provinsi Bali)</small></h6>
+                    <div style="overflow-y: auto; height: 350px;">
+                        <div class="chart-container-national">
+                            <canvas id="nasionalChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="card card-custom flex-fill p-2">
-                    <h6 class="text-center fw-bold mt-2" id="judulKecamatan">Top 10 Capaian Kecamatan Tertinggi (Provinsi)</h6>
-                    <div class="chart-container">
-                        <canvas id="kecamatanChart"></canvas>
-                    </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <div class="card card-custom p-2 h-100">
+                    <h6 class="text-center fw-bold mt-2">Capaian Kabupaten/Kota</h6>
+                    <div class="chart-container"><canvas id="kabupatenChart"></canvas></div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <div class="card card-custom p-2 h-100 position-relative">
+                    <div class="mow-overlay">Data PB MOW tidak tersedia untuk level Kecamatan</div>
+                    <h6 class="text-center fw-bold mt-2" id="judulKecTop">Top 10 Kecamatan Tertinggi</h6>
+                    <div class="chart-container"><canvas id="kecamatanTopChart"></canvas></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-custom p-2 h-100 position-relative">
+                    <div class="mow-overlay">Data PB MOW tidak tersedia untuk level Kecamatan</div>
+                    <h6 class="text-center fw-bold mt-2" id="judulKecBot">Top 10 Kecamatan Terendah</h6>
+                    <div class="chart-container"><canvas id="kecamatanBotChart"></canvas></div>
                 </div>
             </div>
         </div>
 
         <div class="row">
             <div class="col-12">
-                <div class="card card-custom p-0">
+                <div class="card card-custom p-0 position-relative">
+                    <div class="mow-overlay" style="padding: 50px;">Data PB MOW tidak dilakukan pencatatan di tingkat Desa/Kelurahan. Silakan pilih metrik lain.</div>
                     <h6 class="text-center fw-bold p-3 m-0 border-bottom" id="judulDesa">Capaian Desa/Kelurahan (Provinsi)</h6>
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-bordered table-striped table-hover table-custom m-0" id="tabelDesa">
-                            <thead>
+                            <thead style="position: sticky; top: 0; z-index: 2;">
                                 <tr>
                                     <th width="5%">No</th>
                                     <th width="15%">Kabupaten/Kota</th>
                                     <th width="15%">Kecamatan</th>
                                     <th width="20%">Desa/Kelurahan</th>
                                     <th width="15%">Target Kecamatan</th>
-                                    <th width="15%">Capaian Desa/Kelurahan</th>
-                                    <th width="15%">Persentase dari Target Kecamatan (%)</th>
+                                    <th width="15%">Capaian <span id="labelTabel"></span></th>
+                                    <th width="15%">Persentase (%)</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="7" class="text-center py-4">Memuat data...</td>
-                                </tr>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -167,135 +161,180 @@
 
     </div>
 
-    <footer class="footer-custom">
-        timjakbkrbali&copy;2026
-    </footer>
+    <footer class="footer-custom">timjakbkrbali&copy;2026</footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
+        // Variabel Status Global
+        let currentMetric = 'TOTAL'; // Default metrik yang dipilih
+        let currentKabFilter = 'Semua';
+
+        Chart.register(ChartDataLabels);
+        let map, chartNasional, chartKab, chartKecTop, chartKecBot;
+
         // ==========================================
-        // GENERATE DROPDOWN TANGGAL OTOMATIS
+        // DUMMY DATA YANG DIPERLUAS (Ada TOTAL, KBPP, MKJP, MOW)
         // ==========================================
+        const dataNasional = [
+            { Provinsi: "Jawa Timur", TOTAL: 85, KBPP: 80, MKJP: 75, MOW: 60 },
+            { Provinsi: "Jawa Barat", TOTAL: 82, KBPP: 78, MKJP: 70, MOW: 55 },
+            { Provinsi: "Jawa Tengah", TOTAL: 80, KBPP: 75, MKJP: 68, MOW: 50 },
+            { Provinsi: "Bali", TOTAL: 65, KBPP: 60, MKJP: 55, MOW: 45 },
+            { Provinsi: "DKI Jakarta", TOTAL: 60, KBPP: 55, MKJP: 50, MOW: 40 },
+            { Provinsi: "Banten", TOTAL: 58, KBPP: 52, MKJP: 48, MOW: 38 },
+            { Provinsi: "DIY", TOTAL: 55, KBPP: 50, MKJP: 45, MOW: 35 },
+            { Provinsi: "Sumatera Utara", TOTAL: 50, KBPP: 48, MKJP: 40, MOW: 30 },
+            { Provinsi: "Sulawesi Selatan", TOTAL: 45, KBPP: 40, MKJP: 35, MOW: 25 },
+            { Provinsi: "NTB", TOTAL: 40, KBPP: 38, MKJP: 30, MOW: 20 }
+        ];
+
+        const dataKabupaten = [
+            { Kabupaten: "Badung", Target: 1000, TOTAL: 800, KBPP: 750, MKJP: 600, MOW: 100 }, 
+            { Kabupaten: "Bangli", Target: 500, TOTAL: 450, KBPP: 400, MKJP: 300, MOW: 50 },
+            { Kabupaten: "Buleleng", Target: 1200, TOTAL: 950, KBPP: 900, MKJP: 750, MOW: 150 }, 
+            { Kabupaten: "Denpasar", Target: 1500, TOTAL: 1200, KBPP: 1100, MKJP: 900, MOW: 200 },
+            { Kabupaten: "Gianyar", Target: 1000, TOTAL: 750, KBPP: 700, MKJP: 650, MOW: 120 }, 
+            { Kabupaten: "Jembrana", Target: 800, TOTAL: 600, KBPP: 550, MKJP: 450, MOW: 80 },
+            { Kabupaten: "Karangasem", Target: 700, TOTAL: 550, KBPP: 500, MKJP: 400, MOW: 70 }, 
+            { Kabupaten: "Klungkung", Target: 500, TOTAL: 400, KBPP: 350, MKJP: 300, MOW: 40 },
+            { Kabupaten: "Tabanan", Target: 1000, TOTAL: 850, KBPP: 800, MKJP: 700, MOW: 110 }
+        ];
+
+        const dataKecamatan = [
+            { Kabupaten: "Jembrana", Kecamatan: "Negara", Target: 300, TOTAL: 150, KBPP: 140, MKJP: 100 },
+            { Kabupaten: "Jembrana", Kecamatan: "Mendoyo", Target: 200, TOTAL: 120, KBPP: 110, MKJP: 80 },
+            { Kabupaten: "Jembrana", Kecamatan: "Melaya", Target: 200, TOTAL: 40, KBPP: 35, MKJP: 20 },
+            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Target: 400, TOTAL: 200, KBPP: 190, MKJP: 150 },
+            { Kabupaten: "Tabanan", Kecamatan: "Tabanan", Target: 350, TOTAL: 180, KBPP: 170, MKJP: 140 },
+            { Kabupaten: "Tabanan", Kecamatan: "Selemadeg", Target: 100, TOTAL: 20, KBPP: 15, MKJP: 10 },
+            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Target: 500, TOTAL: 350, KBPP: 320, MKJP: 280 },
+            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Barat", Target: 500, TOTAL: 300, KBPP: 280, MKJP: 250 },
+            { Kabupaten: "Badung", Kecamatan: "Kuta", Target: 400, TOTAL: 280, KBPP: 250, MKJP: 200 },
+            { Kabupaten: "Badung", Kecamatan: "Abiansemal", Target: 200, TOTAL: 50, KBPP: 45, MKJP: 30 },
+            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Target: 300, TOTAL: 210, KBPP: 200, MKJP: 180 },
+            { Kabupaten: "Buleleng", Kecamatan: "Gerokgak", Target: 200, TOTAL: 30, KBPP: 25, MKJP: 15 },
+            { Kabupaten: "Gianyar", Kecamatan: "Ubud", Target: 300, TOTAL: 190, KBPP: 180, MKJP: 150 },
+            { Kabupaten: "Bangli", Kecamatan: "Kintamani", Target: 250, TOTAL: 140, KBPP: 130, MKJP: 100 }
+        ];
+
+        const dataDesa = [
+            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Baler Bale Agung", TargetKec: 300, TOTAL: 50, KBPP: 45, MKJP: 30 },
+            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Banjar Tengah", TargetKec: 300, TOTAL: 45, KBPP: 40, MKJP: 25 },
+            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Desa: "Kediri", TargetKec: 400, TOTAL: 120, KBPP: 110, MKJP: 90 },
+            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Desa: "Sanur", TargetKec: 500, TOTAL: 150, KBPP: 140, MKJP: 120 },
+            { Kabupaten: "Badung", Kecamatan: "Kuta", Desa: "Legian", TargetKec: 400, TOTAL: 90, KBPP: 85, MKJP: 70 },
+            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Desa: "Sangsit", TargetKec: 300, TOTAL: 60, KBPP: 55, MKJP: 40 }
+        ];
+
+        const koordinatKabupaten = {
+            "Buleleng": { lat: -8.2045, lng: 114.9616 }, "Jembrana": { lat: -8.3204, lng: 114.6540 },
+            "Tabanan": { lat: -8.4503, lng: 115.0345 }, "Badung": { lat: -8.5835, lng: 115.1775 },
+            "Denpasar": { lat: -8.6705, lng: 115.2126 }, "Gianyar": { lat: -8.4682, lng: 115.3090 },
+            "Bangli": { lat: -8.2542, lng: 115.3547 }, "Klungkung": { lat: -8.5369, lng: 115.4124 },
+            "Karangasem": { lat: -8.3842, lng: 115.5406 }
+        };
+
+        // ==========================================
+        // INISIALISASI
+        // ==========================================
+        function initDashboard() {
+            generateDateOptions(); 
+            initMap();
+            updateAllComponents();
+        }
+
+        // Generate Opsi Tanggal (Mulai 9 Juni karena 8 Juni dihapus)
         function generateDateOptions() {
             const select = document.getElementById('dateFilter');
-            const bulanIndo = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
-            
-            // Loop Tanggal 8 Juni s/d 12 Juli 2026
-            let startDate = new Date(2026, 5, 8); // Bulan index 5 = Juni
-            let endDate = new Date(2026, 6, 12);  // Bulan index 6 = Juli
+            const bulanIndo = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
+            let startDate = new Date(2026, 5, 9); // Mulai 9 Juni
+            let endDate = new Date(2026, 6, 12);  
 
             while (startDate <= endDate) {
                 let d = startDate.getDate();
                 let m = bulanIndo[startDate.getMonth()];
                 let y = startDate.getFullYear();
-                
-                let opt = document.createElement('option');
-                opt.text = `${d} ${m} ${y} PUKUL 15.00 WIB`;
-                // Value format YYYY-MM-DD
-                opt.value = `${y}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
-                
-                select.appendChild(opt);
-                
-                // Tambah 1 hari
+                select.add(new Option(`${d} ${m} ${y} PUKUL 15.00 WIB`, `${y}-${m}-${d}`));
                 startDate.setDate(startDate.getDate() + 1);
             }
         }
 
-        Chart.register(ChartDataLabels);
-
         // ==========================================
-        // DUMMY DATA (Target ditambahkan untuk hitung persentase Peta)
+        // LOGIKA PERUBAHAN METRIK (CARD DIKLIK)
         // ==========================================
-        const dataKabupaten = [
-            { Kabupaten: "Badung", Capaian: 800, Target: 1000 }, 
-            { Kabupaten: "Bangli", Capaian: 450, Target: 500 },
-            { Kabupaten: "Buleleng", Capaian: 950, Target: 1200 }, 
-            { Kabupaten: "Denpasar", Capaian: 1200, Target: 1500 },
-            { Kabupaten: "Gianyar", Capaian: 750, Target: 1000 }, 
-            { Kabupaten: "Jembrana", Capaian: 600, Target: 800 },
-            { Kabupaten: "Karangasem", Capaian: 550, Target: 700 }, 
-            { Kabupaten: "Klungkung", Capaian: 400, Target: 500 },
-            { Kabupaten: "Tabanan", Capaian: 850, Target: 1000 }
-        ];
+        function changeMetric(metric) {
+            currentMetric = metric;
+            
+            // Ubah Style Card Aktif
+            document.querySelectorAll('.kpi-card').forEach(el => el.classList.remove('active'));
+            document.getElementById('card_' + metric).classList.add('active');
+            document.getElementById('labelNasional').innerText = 'PB ' + metric;
+            document.getElementById('labelTabel').innerText = 'PB ' + metric;
 
-        const dataKecamatan = [
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Capaian: 150 },
-            { Kabupaten: "Jembrana", Kecamatan: "Mendoyo", Capaian: 120 },
-            { Kabupaten: "Jembrana", Kecamatan: "Melaya", Capaian: 90 },
-            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Capaian: 200 },
-            { Kabupaten: "Tabanan", Kecamatan: "Tabanan", Capaian: 180 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Capaian: 350 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Barat", Capaian: 300 },
-            { Kabupaten: "Badung", Kecamatan: "Kuta", Capaian: 280 },
-            { Kabupaten: "Badung", Kecamatan: "Mengwi", Capaian: 250 },
-            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Capaian: 210 },
-            { Kabupaten: "Gianyar", Kecamatan: "Ubud", Capaian: 190 },
-            { Kabupaten: "Bangli", Kecamatan: "Kintamani", Capaian: 140 }
-        ];
+            // Jika MOW, tampilkan overlay peringatan di chart Kec & Desa
+            const overlays = document.querySelectorAll('.mow-overlay');
+            if (metric === 'MOW') {
+                overlays.forEach(el => el.style.display = 'flex');
+            } else {
+                overlays.forEach(el => el.style.display = 'none');
+            }
 
-        const dataDesa = [
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Baler Bale Agung", TargetKec: 500, Capaian: 50 },
-            { Kabupaten: "Jembrana", Kecamatan: "Negara", Desa: "Banjar Tengah", TargetKec: 500, Capaian: 45 },
-            { Kabupaten: "Tabanan", Kecamatan: "Kediri", Desa: "Kediri", TargetKec: 800, Capaian: 120 },
-            { Kabupaten: "Denpasar", Kecamatan: "Denpasar Selatan", Desa: "Sanur", TargetKec: 1500, Capaian: 150 },
-            { Kabupaten: "Badung", Kecamatan: "Kuta", Desa: "Legian", TargetKec: 1000, Capaian: 90 },
-            { Kabupaten: "Buleleng", Kecamatan: "Sawan", Desa: "Sangsit", TargetKec: 700, Capaian: 60 }
-        ];
-
-        const koordinatKabupaten = {
-            "Buleleng": { lat: -8.2045, lng: 114.9616 },
-            "Jembrana": { lat: -8.3204, lng: 114.6540 },
-            "Tabanan": { lat: -8.4503, lng: 115.0345 },
-            "Badung": { lat: -8.5835, lng: 115.1775 },
-            "Denpasar": { lat: -8.6705, lng: 115.2126 },
-            "Gianyar": { lat: -8.4682, lng: 115.3090 },
-            "Bangli": { lat: -8.2542, lng: 115.3547 },
-            "Klungkung": { lat: -8.5369, lng: 115.4124 },
-            "Karangasem": { lat: -8.3842, lng: 115.5406 }
-        };
-
-        let map;
-        let chartKab, chartKec;
-
-        // ==========================================
-        // INISIALISASI DASHBOARD & PETA
-        // ==========================================
-        function initDashboard() {
-            generateDateOptions(); 
-            initMap();
-            renderDashboard("Semua");
+            // Refresh data yang tampil
+            updateAllComponents();
         }
 
+        function updateAllComponents() {
+            renderMap();
+            renderChartNasional();
+            renderDashboard(currentKabFilter);
+        }
+
+        // ==========================================
+        // PETA LEAFLET
+        // ==========================================
         function initMap() {
             map = L.map('map').setView([-8.409518, 115.188919], 9);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+        }
+
+        function renderMap() {
+            // Hapus layer marker yang lama
+            map.eachLayer((layer) => { if (layer instanceof L.Marker) map.removeLayer(layer); });
 
             for (let kab in koordinatKabupaten) {
-                // Kalkulasi Persentase Capaian per Kabupaten
                 let dataKab = dataKabupaten.find(d => d.Kabupaten === kab);
                 let persen = "0.00";
                 
                 if(dataKab && dataKab.Target > 0) {
-                    persen = ((dataKab.Capaian / dataKab.Target) * 100).toFixed(2);
+                    persen = ((dataKab[currentMetric] / dataKab.Target) * 100).toFixed(2);
                 }
 
-                let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng])
-                    .addTo(map)
+                let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng]).addTo(map)
                     .bindTooltip(`
-                        <div class="text-center">
-                            <b>${kab}</b><br>
-                            <span class="badge bg-primary mt-1" style="font-size:0.9rem;">${persen}%</span>
+                        <div class="text-center p-1">
+                            <b style="font-size:1.1rem;">${kab}</b><br>
+                            <span class="badge bg-primary mt-1" style="font-size:1rem;">${persen}%</span>
                         </div>
-                    `, { permanent: true, direction: 'top', className: 'bg-white border-primary border p-1' });
+                    `, { permanent: true, direction: 'top', className: 'bg-white border-primary border' });
                 
-                marker.on('click', function() {
-                    filterDashboardByKabupaten(kab);
-                });
+                marker.on('click', function() { filterDashboardByKabupaten(kab); });
             }
+        }
+
+        // ==========================================
+        // FILTER & RENDER KOMPONEN BAWAH
+        // ==========================================
+        function filterDashboardByKabupaten(kabName) {
+            currentKabFilter = kabName;
+            let latlng = koordinatKabupaten[kabName];
+            map.flyTo([latlng.lat, latlng.lng], 11, { duration: 1 });
+            renderDashboard(kabName);
+        }
+
+        function resetFilter() {
+            currentKabFilter = 'Semua';
+            map.flyTo([-8.409518, 115.188919], 9, { duration: 1 });
+            renderDashboard("Semua");
         }
 
         function renderDashboard(filterKabupaten) {
@@ -303,127 +342,101 @@
 
             let filteredKec = dataKecamatan;
             let filteredDesa = dataDesa;
+            let labelLokasi = filterKabupaten === "Semua" ? "Provinsi" : filterKabupaten;
 
             if (filterKabupaten !== "Semua") {
                 filteredKec = dataKecamatan.filter(k => k.Kabupaten === filterKabupaten);
                 filteredDesa = dataDesa.filter(d => d.Kabupaten === filterKabupaten);
-                
-                document.getElementById('judulKecamatan').innerText = `Top 10 Capaian Kecamatan Tertinggi (${filterKabupaten})`;
-                document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (${filterKabupaten})`;
                 document.getElementById('resetFilterBtn').style.display = 'block'; 
             } else {
-                document.getElementById('judulKecamatan').innerText = `Top 10 Capaian Kecamatan Tertinggi (Provinsi)`;
-                document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (Provinsi)`;
                 document.getElementById('resetFilterBtn').style.display = 'none';
             }
 
-            filteredKec.sort((a, b) => b.Capaian - a.Capaian);
-            let top10Kec = filteredKec.slice(0, 10);
+            document.getElementById('judulKecTop').innerText = `Top 10 Kecamatan Tertinggi (${labelLokasi})`;
+            document.getElementById('judulKecBot').innerText = `Top 10 Kecamatan Terendah (${labelLokasi})`;
+            document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (${labelLokasi})`;
 
-            renderChartKecamatan(top10Kec);
-            renderTableDesa(filteredDesa);
-        }
+            // Sortir Tertinggi dan Terendah
+            // Kalkulasi persentase dulu agar akurat
+            let calcKec = filteredKec.map(k => {
+                return { ...k, persen: (k[currentMetric] / k.Target) * 100 }
+            });
 
-        function filterDashboardByKabupaten(kabName) {
-            let latlng = koordinatKabupaten[kabName];
-            map.flyTo([latlng.lat, latlng.lng], 11, { duration: 1.5 });
-            renderDashboard(kabName);
-        }
+            // Top 10
+            let top10Kec = [...calcKec].sort((a, b) => b.persen - a.persen).slice(0, 10);
+            // Bottom 10 (Hindari duplikasi jika data sedikit)
+            let bot10Kec = [...calcKec].sort((a, b) => a.persen - b.persen).slice(0, 10);
 
-        function resetFilter() {
-            map.flyTo([-8.409518, 115.188919], 9, { duration: 1.5 });
-            renderDashboard("Semua");
+            if(currentMetric !== 'MOW'){
+                renderChartKecamatan(top10Kec, 'kecamatanTopChart', '#28a745'); // Hijau
+                renderChartKecamatan(bot10Kec, 'kecamatanBotChart', '#dc3545'); // Merah
+                renderTableDesa(filteredDesa);
+            }
         }
 
         // ==========================================
-        // FUNGSI RENDER CHART & TABLE
+        // CHART CHART CHART
         // ==========================================
+        function createBarChart(ctxId, chartObj, labels, dataArr, bgColor, isHorizontal = false) {
+            const ctx = document.getElementById(ctxId).getContext('2d');
+            if (chartObj) chartObj.destroy(); 
+
+            let dataObj = {
+                labels: labels,
+                datasets: [{ data: dataArr, backgroundColor: bgColor, borderRadius: 3 }]
+            };
+
+            let options = {
+                responsive: true, maintainAspectRatio: false,
+                indexAxis: isHorizontal ? 'y' : 'x',
+                layout: { padding: { top: isHorizontal? 0: 25, right: isHorizontal? 40: 0 } },
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end', align: isHorizontal? 'right': 'top',
+                        formatter: val => val + "%", font: { weight: 'bold', size: 10 }, color: '#333'
+                    }
+                },
+                scales: { 
+                    [isHorizontal? 'x': 'y']: { beginAtZero: true, grace: '10%' },
+                    [isHorizontal? 'y': 'x']: { ticks: { autoSkip: false } }
+                }
+            };
+
+            // Tambahkan fitur klik khusus untuk Kab
+            if(ctxId === 'kabupatenChart'){
+                options.onClick = (e, elements) => {
+                    if (elements.length > 0) filterDashboardByKabupaten(labels[elements[0].index]);
+                }
+            }
+
+            return new Chart(ctx, { type: 'bar', data: dataObj, options: options });
+        }
+
+        function renderChartNasional() {
+            // Sort data nasional dari tertinggi
+            let sortedData = [...dataNasional].sort((a, b) => b[currentMetric] - a[currentMetric]);
+            let labels = sortedData.map(d => d.Provinsi);
+            let dataArr = sortedData.map(d => d[currentMetric]);
+            
+            // Highlight Bali
+            let bgColors = labels.map(prov => prov === "Bali" ? "#ffc107" : "#004a99");
+
+            chartNasional = createBarChart('nasionalChart', chartNasional, labels, dataArr, bgColors, true);
+        }
+
         function renderChartKabupaten(data) {
-            const ctx = document.getElementById('kabupatenChart').getContext('2d');
-            if (chartKab) chartKab.destroy(); 
-
-            chartKab = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.Kabupaten),
-                    datasets: [{
-                        label: 'Capaian',
-                        data: data.map(d => d.Capaian),
-                        backgroundColor: '#004a99',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: { top: 25 } 
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: Math.round,
-                            font: { weight: 'bold', size: 11 },
-                            color: '#333'
-                        }
-                    },
-                    scales: { 
-                        y: { 
-                            beginAtZero: true,
-                            grace: '5%' 
-                        } 
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const clickedKab = chartKab.data.labels[elements[0].index];
-                            filterDashboardByKabupaten(clickedKab);
-                        }
-                    }
-                }
-            });
+            let labels = data.map(d => d.Kabupaten);
+            // Hitung persentase
+            let dataArr = data.map(d => ((d[currentMetric] / d.Target)*100).toFixed(1));
+            chartKab = createBarChart('kabupatenChart', chartKab, labels, dataArr, '#004a99');
         }
 
-        function renderChartKecamatan(data) {
-            const ctx = document.getElementById('kecamatanChart').getContext('2d');
-            if (chartKec) chartKec.destroy();
-
-            chartKec = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.Kecamatan),
-                    datasets: [{
-                        label: 'Capaian',
-                        data: data.map(d => d.Capaian),
-                        backgroundColor: '#28a745', 
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: { top: 25 }
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: Math.round,
-                            font: { weight: 'bold', size: 11 },
-                            color: '#333'
-                        }
-                    },
-                    scales: { 
-                        y: { 
-                            beginAtZero: true,
-                            grace: '5%'
-                        } 
-                    }
-                }
-            });
+        function renderChartKecamatan(data, elementId, color) {
+            let labels = data.map(d => d.Kecamatan);
+            let dataArr = data.map(d => d.persen.toFixed(1));
+            if(elementId === 'kecamatanTopChart') chartKecTop = createBarChart(elementId, chartKecTop, labels, dataArr, color);
+            else chartKecBot = createBarChart(elementId, chartKecBot, labels, dataArr, color);
         }
 
         function renderTableDesa(data) {
@@ -431,18 +444,17 @@
             tbody.innerHTML = ''; 
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Data tidak ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Data tidak ditemukan.</td></tr>';
                 return;
             }
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                let persen = ((row.Capaian / row.TargetKec) * 100).toFixed(2);
+                let target = row.TargetKec;
+                let capaian = row[currentMetric];
+                let persen = ((capaian / target) * 100).toFixed(2);
                 
-                let colorBar = "#28a745"; 
-                if (persen < 10) colorBar = "#ffc107"; 
-                if (persen < 5) colorBar = "#dc3545"; 
-
+                let colorBar = persen >= 10 ? "#28a745" : (persen >= 5 ? "#ffc107" : "#dc3545"); 
                 let bgStyle = `background: linear-gradient(90deg, ${colorBar} ${persen}%, transparent ${persen}%);`;
 
                 tr.innerHTML = `
@@ -450,8 +462,8 @@
                     <td>${row.Kabupaten}</td>
                     <td>${row.Kecamatan}</td>
                     <td class="fw-bold">${row.Desa}</td>
-                    <td class="text-end">${row.TargetKec}</td>
-                    <td class="text-end">${row.Capaian}</td>
+                    <td class="text-end">${target}</td>
+                    <td class="text-end fw-bold text-primary">${capaian}</td>
                     <td class="text-center position-relative">
                         <div style="${bgStyle} width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0.3; z-index: 1;"></div>
                         <span style="position: relative; z-index: 2; font-weight: bold;">${persen}%</span>
@@ -462,7 +474,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', initDashboard);
-
     </script>
 </body>
 </html>
