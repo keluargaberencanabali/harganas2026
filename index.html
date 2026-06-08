@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard HARGANAS 2026 - Provinsi Bali</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f7f6; }
+        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
+        .header-title { background-color: #004a99; color: white; padding: 20px 0; margin-bottom: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title">
+        <h2>Dashboard Progress Pelayanan KB HARGANAS 2026</h2>
+        <p>Provinsi Bali | Update Data Dinamis</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card p-3">
+                    <h4 class="text-center">Grafik Capaian Total per Kabupaten</h4>
+                    <canvas id="barChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card p-3">
+                    <h4 class="text-center mb-3">Tabel Rekapitulasi Kabupaten</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover" id="dataTable">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Kabupaten</th>
+                                    <th>Target Total</th>
+                                    <th>Capaian Total</th>
+                                    <th>Persentase (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" class="text-center">Memuat data dari server...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL WEB APP DARI GOOGLE APPS SCRIPT DI SINI
+        const GOOGLE_SHEET_API_URL = 'PASTE_URL_WEB_APP_ANDA_DISINI';
+
+        async function fetchData() {
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL);
+                const data = await response.json();
+                
+                renderTable(data);
+                renderChart(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.querySelector('#dataTable tbody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.querySelector('#dataTable tbody');
+            tbody.innerHTML = ''; // Kosongkan text loading
+
+            data.forEach((row, index) => {
+                // Pastikan nama properti sesuai dengan header di Sheet "API_Kabupaten"
+                const tr = document.createElement('tr');
+                
+                // Logika warna untuk persentase (Opsional, menyesuaikan gambar Anda)
+                let colorClass = "";
+                let persen = parseFloat(row.Persentase_Total * 100).toFixed(2); // Asumsi format desimal di sheet
+                
+                if(persen < 50) colorClass = "bg-danger text-white";
+                else if(persen >= 50 && persen < 80) colorClass = "bg-warning";
+                else if(persen >= 80) colorClass = "bg-success text-white";
+
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><b>${row.Kabupaten}</b></td>
+                    <td>${row.Target_Total}</td>
+                    <td>${row.Capaian_Total}</td>
+                    <td class="${colorClass}">${persen}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(data) {
+            // Menyiapkan data untuk Chart.js
+            const labels = data.map(row => row.Kabupaten);
+            const capaianData = data.map(row => row.Capaian_Total);
+            const targetData = data.map(row => row.Target_Total);
+
+            const ctx = document.getElementById('barChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Capaian Total',
+                            data: capaianData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Target Total',
+                            data: targetData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Panggil fungsi saat halaman dimuat
+        fetchData();
+    </script>
+</body>
+</html>
