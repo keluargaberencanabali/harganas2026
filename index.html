@@ -20,7 +20,8 @@
         #map { width: 100%; height: 100%; min-height: 400px; z-index: 1; }
         
         .chart-container { position: relative; height: 260px; width: 100%; }
-        .chart-container-national { position: relative; height: 400px; width: 100%; } 
+        /* Hapus height fix di CSS untuk chart nasional agar bisa dinamis via JS */
+        .chart-container-national { position: relative; width: 100%; } 
 
         .table-custom th { background-color: #dbeaff; text-align: center; vertical-align: middle; font-size: 0.85rem; }
         .table-custom td { font-size: 0.85rem; vertical-align: middle; }
@@ -69,13 +70,17 @@
     <!-- Konten Utama -->
     <div class="container-fluid p-4">
         
-        <!-- BARIS 1: Lebar disesuaikan (2 - 4 - 6) -->
         <div class="row mb-4 align-items-stretch">
             
             <!-- BLOK KIRI: 4 Card (col-2) -->
             <div class="col-lg-2 mb-4 mb-lg-0 d-flex flex-column">
                 <div class="card card-custom h-100 p-2 bg-light">
-                    <h6 class="text-center fw-bold mb-3 border-bottom pb-2 mt-1">DATA CAPAIAN <br><small style="font-size: 0.7rem;" class="text-muted">(Klik untuk filter)</small></h6>
+                    <!-- Revisi Label Data Capaian -->
+                    <h6 class="text-center fw-bold mb-3 border-bottom pb-2 mt-1" style="line-height: 1.3;">
+                        DATA CAPAIAN <br>
+                        <span class="text-primary" style="font-size: 1.05rem;">PROVINSI BALI</span><br>
+                        <small style="font-size: 0.7rem;" class="text-muted fw-normal">(Klik untuk filter)</small>
+                    </h6>
                     
                     <div class="kpi-card active" id="card_TOTAL" onclick="changeMetric('TOTAL')">
                         <h5>PB TOTAL</h5>
@@ -107,8 +112,12 @@
             <!-- BLOK KANAN: Nasional (col-6) -->
             <div class="col-lg-6">
                 <div class="card card-custom h-100 p-2">
-                    <h6 class="text-center fw-bold mt-2">Capaian Nasional <span id="labelNasional">PB TOTAL</span><br><small class="text-muted fw-normal">(Highlight Provinsi Bali)</small></h6>
-                    <div style="overflow-y: auto; height: 350px; overflow-x: hidden;">
+                    <h6 class="text-center fw-bold mt-2">
+                        Capaian Nasional <span id="labelNasional">PB TOTAL</span><br>
+                        <small class="text-muted fw-normal">(Bandingkan Bali vs Rata-rata Nasional)</small>
+                    </h6>
+                    <!-- Container dengan scroll untuk mengatasi grafik gepeng -->
+                    <div style="overflow-y: auto; height: 350px; overflow-x: hidden; padding-right: 5px;">
                         <div class="chart-container-national">
                             <canvas id="nasionalChart"></canvas>
                         </div>
@@ -117,7 +126,6 @@
             </div>
         </div>
 
-        <!-- BARIS 2: Grafik Kab/Kota & Kecamatan -->
         <div class="row mb-4">
             <div class="col-lg-4 mb-4 mb-lg-0">
                 <div class="card card-custom p-2 h-100">
@@ -141,7 +149,6 @@
             </div>
         </div>
 
-        <!-- BARIS 3: Tabel Desa -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-custom p-0 position-relative">
@@ -179,7 +186,7 @@
         // ==========================================
         // KONFIGURASI API (PASTE URL ANDA DI SINI!)
         // ==========================================
-        const BASE_API_URL = 'https://script.google.com/macros/s/AKfycbz1pW1E4itbZhYSjI4G_rlb-iQU3JQ9lhDJZvall4cdWZo5hlvbhdrmpLDy143xtmAcJA/exec'; 
+        const BASE_API_URL = 'PASTE_URL_WEB_APP_ANDA_DISINI'; 
 
         // Variabel Global
         let currentMetric = 'TOTAL'; 
@@ -193,7 +200,6 @@
         Chart.register(ChartDataLabels);
         let map, chartNasional, chartKab, chartKecTop, chartKecBot;
 
-        // Titik Koordinat
         const koordinatKabupaten = {
             "Buleleng": { lat: -8.2045, lng: 114.9616 }, "Jembrana": { lat: -8.3204, lng: 114.6540 },
             "Tabanan": { lat: -8.4503, lng: 115.0345 }, "Badung": { lat: -8.5835, lng: 115.1775 },
@@ -202,8 +208,6 @@
             "Karangasem": { lat: -8.3842, lng: 115.5406 }
         };
 
-        // ==========================================
-        // INISIALISASI
         // ==========================================
         function initDashboard() {
             generateDateOptions(); 
@@ -232,8 +236,6 @@
             }
         }
 
-        // ==========================================
-        // FETCH DATA
         // ==========================================
         async function fetchSemuaData(tanggal) {
             try {
@@ -267,7 +269,6 @@
                 });
 
                 currentKabFilter = 'Semua';
-                // Reset zoom peta fokus ke pulau Bali
                 if(map) map.fitBounds([[ -8.0, 114.4 ], [ -8.8, 115.7 ]]);
 
                 document.getElementById('mainLoading').style.display = 'none';
@@ -280,8 +281,6 @@
             }
         }
 
-        // ==========================================
-        // LOGIKA PERUBAHAN METRIK
         // ==========================================
         function changeMetric(metric) {
             currentMetric = metric;
@@ -308,19 +307,16 @@
         }
 
         // ==========================================
-        // PETA LEAFLET
-        // ==========================================
         function initMap() {
             map = L.map('map', { zoomControl: true });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-            map.fitBounds([[ -8.0, 114.4 ], [ -8.8, 115.7 ]]); // Set bounding box khusus pulau Bali
+            map.fitBounds([[ -8.0, 114.4 ], [ -8.8, 115.7 ]]); 
         }
 
         function renderMap() {
             map.eachLayer((layer) => { if (layer instanceof L.Marker) map.removeLayer(layer); });
 
             for (let kab in koordinatKabupaten) {
-                // Pencocokan Case-Insensitive (Mengabaikan huruf besar/kecil)
                 let dataKab = dataKabupaten.find(d => d.Kabupaten && d.Kabupaten.toUpperCase() === kab.toUpperCase());
                 let persen = "0.00";
                 
@@ -329,7 +325,6 @@
                     persen = ((capaian / dataKab.Target) * 100).toFixed(2);
                 }
 
-                // Label satu baris yang elegan
                 let marker = L.marker([koordinatKabupaten[kab].lat, koordinatKabupaten[kab].lng]).addTo(map)
                     .bindTooltip(`
                         <div class="px-1 py-0">
@@ -343,12 +338,9 @@
         }
 
         // ==========================================
-        // FILTER & RENDER KOMPONEN BAWAH
-        // ==========================================
         function filterDashboardByKabupaten(kabName) {
             currentKabFilter = kabName;
             
-            // Cari koordinat dengan Case-Insensitive
             let mapKey = Object.keys(koordinatKabupaten).find(k => k.toUpperCase() === kabName.toUpperCase());
             if (mapKey) {
                 let latlng = koordinatKabupaten[mapKey];
@@ -372,7 +364,6 @@
             let labelLokasi = filterKabupaten === "Semua" ? "Provinsi" : filterKabupaten;
 
             if (filterKabupaten !== "Semua") {
-                // Pencocokan Case-Insensitive
                 let filterUpper = filterKabupaten.toUpperCase();
                 filteredKec = dataKecamatan.filter(k => k.Kabupaten && k.Kabupaten.toUpperCase() === filterUpper);
                 filteredDesa = dataDesa.filter(d => d.Kabupaten && d.Kabupaten.toUpperCase() === filterUpper);
@@ -385,20 +376,18 @@
             document.getElementById('judulKecBot').innerText = `Top 10 Kecamatan Terendah (${labelLokasi})`;
             document.getElementById('judulDesa').innerText = `Capaian Desa/Kelurahan (${labelLokasi})`;
 
-            // Kalkulasi Kecamatan
             let calcKec = filteredKec.map(k => {
                 let target = k.Target || 0;
                 let capaian = k[currentMetric] || 0;
                 return { ...k, persen: target > 0 ? (capaian / target) * 100 : 0 }
             });
 
-            // Kalkulasi & Sorting Desa
             let calcDesa = filteredDesa.map(d => {
                 let target = d.TargetKec || 0;
                 let capaian = d[currentMetric] || 0;
                 return { ...d, persen: target > 0 ? (capaian / target) * 100 : 0 }
             });
-            calcDesa.sort((a, b) => b.persen - a.persen); // Sorting Desa (Tinggi ke Rendah)
+            calcDesa.sort((a, b) => b.persen - a.persen);
 
             let top10Kec = [...calcKec].sort((a, b) => b.persen - a.persen).slice(0, 10);
             let bot10Kec = [...calcKec].sort((a, b) => a.persen - b.persen).slice(0, 10);
@@ -410,8 +399,6 @@
             }
         }
 
-        // ==========================================
-        // CHART & TABEL (RENDERER)
         // ==========================================
         function createBarChart(ctxId, chartObj, labels, dataArr, bgColor, isHorizontal = false) {
             const ctx = document.getElementById(ctxId).getContext('2d');
@@ -425,12 +412,11 @@
             let options = {
                 responsive: true, maintainAspectRatio: false,
                 indexAxis: isHorizontal ? 'y' : 'x',
-                layout: { padding: { top: isHorizontal? 0: 25, right: isHorizontal? 50: 0 } },
+                layout: { padding: { top: isHorizontal? 0: 25, right: isHorizontal? 65: 0 } },
                 plugins: { 
                     legend: { display: false },
                     datalabels: {
                         anchor: 'end', align: isHorizontal? 'right': 'top',
-                        // Format ke persentase dengan 2 digit di belakang koma dan font diperbesar
                         formatter: val => parseFloat(val).toFixed(2) + "%", 
                         font: { weight: 'bold', size: 12 }, 
                         color: '#333'
@@ -454,30 +440,57 @@
             return new Chart(ctx, { type: 'bar', data: dataObj, options: options });
         }
 
+        // Revisi Cemerlang Chart Nasional
         function renderChartNasional() {
             if(!dataNasional || dataNasional.length === 0) {
                 if(chartNasional) chartNasional.destroy();
                 return;
             }
 
-            let sortedData = [...dataNasional].sort((a, b) => {
-                let valA = parseFloat(a[currentMetric]) || 0;
-                let valB = parseFloat(b[currentMetric]) || 0;
-                return valB - valA;
+            // Normalisasi data (ubah desimal < 1 menjadi persentase)
+            let mappedData = dataNasional.map(d => {
+                let val = parseFloat(d[currentMetric]) || 0;
+                return {
+                    Provinsi: d.Provinsi,
+                    nilai: val <= 1 && val > 0 ? (val * 100) : val 
+                };
             });
 
-            let labels = sortedData.map(d => d.Provinsi);
-            let dataArr = sortedData.map(d => {
-                let val = parseFloat(d[currentMetric]) || 0;
-                return val <= 1 ? (val * 100) : val; 
-            });
+            // Cek apakah ada data "Nasional" / "Indonesia" dari sheet API_Nasional
+            let hasNasional = mappedData.some(d => d.Provinsi && (d.Provinsi.toUpperCase() === "NASIONAL" || d.Provinsi.toUpperCase() === "INDONESIA"));
             
-            let bgColors = labels.map(prov => prov.toUpperCase() === "BALI" ? "#ffc107" : "#004a99");
+            // Jika tidak ada data Nasional, hitung rata-rata otomatis sebagai benchmark
+            if(!hasNasional && mappedData.length > 0) {
+                let sum = 0;
+                mappedData.forEach(d => sum += d.nilai);
+                let avg = sum / mappedData.length;
+                mappedData.push({ Provinsi: "NASIONAL (Rata-rata)", nilai: avg });
+            }
+
+            // Urutkan dari tertinggi ke terendah
+            mappedData.sort((a, b) => b.nilai - a.nilai);
+
+            let labels = mappedData.map(d => d.Provinsi);
+            let dataArr = mappedData.map(d => d.nilai);
+            
+            // Logika Warna: Bali Kuning, Nasional Merah, Lainnya Biru
+            let bgColors = labels.map(prov => {
+                let p = prov.toUpperCase();
+                if(p === "BALI") return "#ffc107"; 
+                if(p.includes("NASIONAL") || p === "INDONESIA") return "#dc3545"; 
+                return "#004a99"; 
+            });
+
+            // Trik Canvas Dinamis agar baris tidak gepeng/bertumpuk
+            const chartContainer = document.querySelector('.chart-container-national');
+            let requiredHeight = labels.length * 28; // Estimasi 28px per baris provinsi
+            // Set tinggi minimal agar tidak terlalu kecil
+            chartContainer.style.height = (requiredHeight > 350 ? requiredHeight : 350) + 'px';
+
             chartNasional = createBarChart('nasionalChart', chartNasional, labels, dataArr, bgColors, true);
         }
 
         function renderChartKabupaten(data) {
-            // Kalkulasi persentase dan Sorting (Kiri Tertinggi -> Kanan Terendah)
             let calcData = data.map(d => {
                 let target = d.Target || 0;
                 let capaian = d[currentMetric] || 0;
@@ -493,7 +506,7 @@
 
         function renderChartKecamatan(data, elementId, color) {
             let labels = data.map(d => d.Kecamatan);
-            let dataArr = data.map(d => d.persen); // Tidak perlu toFixed disini, akan diolah di DataLabels
+            let dataArr = data.map(d => d.persen); 
             if(elementId === 'kecamatanTopChart') chartKecTop = createBarChart(elementId, chartKecTop, labels, dataArr, color);
             else chartKecBot = createBarChart(elementId, chartKecBot, labels, dataArr, color);
         }
@@ -511,7 +524,7 @@
                 const tr = document.createElement('tr');
                 let target = row.TargetKec || 0;
                 let capaian = row[currentMetric] || 0;
-                let persen = row.persen; // Sudah dikalkulasi dari fungsi renderDashboard
+                let persen = row.persen; 
                 let persenStr = persen.toFixed(2);
                 
                 let colorBar = persen >= 10 ? "#28a745" : (persen >= 5 ? "#ffc107" : "#dc3545"); 
